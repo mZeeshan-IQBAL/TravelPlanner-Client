@@ -3,13 +3,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoadingSpinner from './components/LoadingSpinner';
 
-// Import pages (we'll create these)
+// Import pages
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Search from './pages/Search';
 import MyTrips from './pages/MyTrips';
 import TripDetails from './pages/TripDetails';
+import Dashboard from './pages/Dashboard';
+import NotFound from './pages/NotFound';
+import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Planner from './pages/Planner';
+import PublicTrip from './pages/PublicTrip';
+import Admin from './pages/Admin';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -41,6 +49,15 @@ const PublicRoute = ({ children }) => {
   return isAuthenticated ? <Navigate to="/" replace /> : children;
 };
 
+// Admin-only route wrapper
+const AdminOnly = ({ children }) => {
+  const { user } = useAuth();
+  if (user?.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -64,13 +81,40 @@ function App() {
                 </PublicRoute>
               } 
             />
+            <Route 
+              path="/forgot-password" 
+              element={
+                <PublicRoute>
+                  <ForgotPassword />
+                </PublicRoute>
+              } 
+            />
+            <Route 
+              path="/reset-password" 
+              element={
+                <PublicRoute>
+                  <ResetPassword />
+                </PublicRoute>
+              } 
+            />
             
+            {/* Public shared trip route */}
+            <Route path="/public/:token" element={<PublicTrip />} />
+
             {/* Protected routes */}
             <Route 
               path="/" 
               element={
                 <ProtectedRoute>
                   <Home />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
                 </ProtectedRoute>
               } 
             />
@@ -98,9 +142,35 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/planner/:id" 
+              element={
+                <ProtectedRoute>
+                  <Planner />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminOnly>
+                    <Admin />
+                  </AdminOnly>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </Router>

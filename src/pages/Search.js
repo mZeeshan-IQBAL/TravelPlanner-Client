@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
+import AdvancedSearch from '../components/AdvancedSearch';
 import { countriesAPI, imagesAPI, weatherAPI, tripsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -133,6 +134,23 @@ const Search = () => {
             </button>
           </div>
           {message && <div className="mt-3 text-sm text-secondary-700">{message}</div>}
+        </div>
+
+        {/* Advanced Trip Search */}
+        <div className="mt-10">
+          <h2 className="text-xl font-semibold text-secondary-900 dark:text-secondary-100 mb-3">
+            Advanced Trip Search
+          </h2>
+          <AdvancedSearch
+            initialQuery={initialQ}
+            onResults={({ trips, pagination, query, error }) => {
+              // For now, just log. You can display results in a separate section.
+              if (error) {
+                console.warn('Advanced search error:', error);
+              }
+              // You could set local state to show these results
+            }}
+          />
         </div>
 
         {/* Results */}

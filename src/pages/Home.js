@@ -78,6 +78,19 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Email verification banner */}
+        {user && user.emailVerified === false && (
+          <div className="card p-4 mb-10 border border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="font-medium text-yellow-800 dark:text-yellow-300">Verify your email</div>
+                <div className="text-sm text-yellow-700 dark:text-yellow-400">Please verify your email to secure your account. Click the button to resend a verification link (printed to server logs in dev).</div>
+              </div>
+              <ResendVerificationButton />
+            </div>
+          </div>
+        )}
+
         {/* Recent Search History */}
         {user?.searchHistory && user.searchHistory.length > 0 && (
           <div className="mt-20">
@@ -143,6 +156,30 @@ const Home = () => {
         )}
       </div>
     </Layout>
+  );
+};
+
+const ResendVerificationButton = () => {
+  const [sending, setSending] = React.useState(false);
+  const [msg, setMsg] = React.useState('');
+  const { loadUser } = useAuth();
+  const onClick = async () => {
+    setSending(true);
+    try {
+      await (await import('../services/api')).authAPI.requestVerification();
+      await loadUser();
+      setMsg('Link sent (check server logs in dev)');
+    } catch (e) {
+      setMsg(e.message || 'Failed to send');
+    } finally {
+      setSending(false);
+    }
+  };
+  return (
+    <div className="flex flex-col items-end">
+      <button className="btn-primary" onClick={onClick} disabled={sending}>{sending ? 'Sending...' : 'Resend link'}</button>
+      {msg && <div className="text-xs text-secondary-600 mt-1 dark:text-secondary-400">{msg}</div>}
+    </div>
   );
 };
 

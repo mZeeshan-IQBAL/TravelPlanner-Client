@@ -85,6 +85,7 @@ const MyTrips = () => {
                 )}
                 <div className="flex gap-2 mt-4">
                   <Link to={`/trip/${t._id}`} className="btn-secondary">Details</Link>
+                  <Link to={`/planner/${t._id}`} className="btn-primary">Open Planner</Link>
                   <button className="btn-secondary" onClick={() => deleteTrip(t._id)}>Delete</button>
                 </div>
               </div>
