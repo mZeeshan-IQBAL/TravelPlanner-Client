@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import { CollaborationIndicator, AvatarGroup } from './Avatar';
 import { useAuth } from '../context/AuthContext';
 import { tripsAPI, placesAPI, directionsAPI } from '../services/api';
+import { exportTripToPDF } from '../utils/pdfExport';
 import L from 'leaflet';
 
 // Custom marker icons
@@ -45,6 +46,8 @@ const TripPlanner = ({ tripId, isCollaborative = true }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [routeData, setRouteData] = useState(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Mock data for demonstration
   const mockTrip = {
@@ -118,6 +121,15 @@ const TripPlanner = ({ tripId, isCollaborative = true }) => {
     }, 1000);
   }, [tripId]);
 
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   const currentDayPlaces = useMemo(() => {
     if (!trip) return [];
     const currentDay = trip.days?.find(d => d.day === selectedDay);
@@ -156,6 +168,80 @@ const TripPlanner = ({ tripId, isCollaborative = true }) => {
     }, 2000);
   };
 
+  const handleExportJSON = async () => {
+    if (!trip) return;
+    try {
+      setIsExporting(true);
+      const response = await tripsAPI.export(trip._id);
+      const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}_export.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setMessage('✅ Trip exported as JSON successfully');
+    } catch (error) {
+      setMessage(`❌ Failed to export JSON: ${error.message}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!trip) return;
+    try {
+      setIsExporting(true);
+      // Use server-side PDF export
+      const response = await tripsAPI.exportPdf(trip._id);
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setMessage('✅ Trip exported as PDF successfully');
+    } catch (error) {
+      // Fallback to client-side PDF export if server fails
+      console.warn('Server PDF export failed, using client-side fallback:', error);
+      try {
+        exportTripToPDF(trip);
+        setMessage('✅ Trip exported as PDF successfully (client-side)');
+      } catch (fallbackError) {
+        setMessage(`❌ Failed to export PDF: ${fallbackError.message}`);
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (!trip) return;
+    try {
+      setIsExporting(true);
+      const response = await tripsAPI.exportXlsx(trip._id);
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setMessage('✅ Trip exported as Excel successfully');
+    } catch (error) {
+      setMessage(`❌ Failed to export Excel: ${error.message}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
@@ -184,6 +270,31 @@ const TripPlanner = ({ tripId, isCollaborative = true }) => {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Export Buttons */}
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={handleExportPDF}
+                  disabled={isExporting}
+                  className="px-3 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isExporting ? '...' : '📋 PDF'}
+                </button>
+                <button 
+                  onClick={handleExportJSON}
+                  disabled={isExporting}
+                  className="px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isExporting ? '...' : '💾 JSON'}
+                </button>
+                <button 
+                  onClick={handleExportExcel}
+                  disabled={isExporting}
+                  className="px-3 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isExporting ? '...' : '📈 Excel'}
+                </button>
+              </div>
+              
               <button className="px-4 py-2 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors">
                 🔗 Share
               </button>
@@ -200,6 +311,12 @@ const TripPlanner = ({ tripId, isCollaborative = true }) => {
           {isCollaborative && activeUsers.length > 0 && (
             <div className="mt-3">
               <CollaborationIndicator activeUsers={activeUsers} />
+            </div>
+          )}
+          
+          {message && (
+            <div className="mt-3 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="text-sm text-blue-800">{message}</div>
             </div>
           )}
         </div>
@@ -371,13 +488,18 @@ const TripPlanner = ({ tripId, isCollaborative = true }) => {
           {/* Map Controls */}
           <div className="absolute top-4 right-4 z-10">
             <div className="bg-white rounded-xl shadow-lg p-2 space-y-2">
-              <button className="w-10 h-10 bg-white hover:bg-secondary-50 rounded-lg flex items-center justify-center text-secondary-600 border border-secondary-200">
+              <button 
+                onClick={handleExportPDF}
+                disabled={isExporting}
+                className="w-10 h-10 bg-white hover:bg-secondary-50 rounded-lg flex items-center justify-center text-secondary-600 border border-secondary-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                title="Export to PDF"
+              >
                 📤
               </button>
-              <button className="w-10 h-10 bg-white hover:bg-secondary-50 rounded-lg flex items-center justify-center text-secondary-600 border border-secondary-200">
+              <button className="w-10 h-10 bg-white hover:bg-secondary-50 rounded-lg flex items-center justify-center text-secondary-600 border border-secondary-200" title="Add location marker">
                 📍
               </button>
-              <button className="w-10 h-10 bg-white hover:bg-secondary-50 rounded-lg flex items-center justify-center text-secondary-600 border border-secondary-200">
+              <button className="w-10 h-10 bg-white hover:bg-secondary-50 rounded-lg flex items-center justify-center text-secondary-600 border border-secondary-200" title="Search places">
                 🔍
               </button>
             </div>

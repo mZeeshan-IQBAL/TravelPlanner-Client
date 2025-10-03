@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
+import NotificationDropdown from "./NotificationDropdown";
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -89,6 +90,8 @@ const Layout = ({ children }) => {
 
             {/* Right side: Auth/User */}
             <div className="flex items-center space-x-4">
+              {/* Notifications - only show when authenticated */}
+              {user && <NotificationDropdown />}
 
               {!user ? (
                 <>

@@ -6,11 +6,13 @@ import FeaturesShowcase from '../components/FeaturesShowcase';
 import SimpleVideoShowcase from '../components/SimpleVideoShowcase';
 import TestimonialsSection from '../components/TestimonialsSection';
 import FeaturedDestinations from '../components/FeaturedDestinations';
+import WeatherWidget from '../components/WeatherWidget';
 
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [weatherCity, setWeatherCity] = useState('');
 
   const handleQuickSearch = (e) => {
     e.preventDefault();
@@ -148,6 +150,61 @@ className="w-full pl-12 pr-4 py-4 text-lg border-0 rounded-l-xl focus:outline-no
       {/* Itinerary Video Showcase */}
       <SimpleVideoShowcase />
 
+      {/* Weather Section */}
+      <div className="bg-white dark:bg-secondary-900 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-secondary-900 dark:text-white mb-4">
+              Check Weather Conditions
+            </h2>
+            <p className="text-secondary-600 dark:text-secondary-300 max-w-2xl mx-auto">
+              Stay informed about the weather at your destination. Perfect for planning outdoor activities and packing the right gear.
+            </p>
+          </div>
+          
+          <div className="max-w-md mx-auto mb-8">
+            <div className="flex items-center bg-white dark:bg-secondary-800 rounded-xl shadow-lg border border-gray-200 dark:border-secondary-700 p-2">
+              <div className="flex-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  value={weatherCity}
+                  onChange={(e) => setWeatherCity(e.target.value)}
+                  placeholder="Enter city name..."
+                  className="w-full pl-12 pr-4 py-3 text-base border-0 rounded-l-xl focus:outline-none focus:ring-0 text-secondary-900 dark:text-secondary-100 placeholder-secondary-500 dark:placeholder-secondary-400 bg-transparent"
+                  onKeyPress={(e) => e.key === 'Enter' && setWeatherCity(weatherCity)}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-center">
+            {weatherCity && (
+              <div className="w-full max-w-lg">
+                <WeatherWidget city={weatherCity} />
+              </div>
+            )}
+            {!weatherCity && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
+                <WeatherWidget city="Paris" compact />
+                <WeatherWidget city="Tokyo" compact />
+                <WeatherWidget city="New York" compact />
+              </div>
+            )}
+          </div>
+          
+          <div className="text-center mt-8">
+            <p className="text-sm text-secondary-500 dark:text-secondary-400">
+              Powered by OpenWeatherMap • Updated every 10 minutes
+            </p>
+          </div>
+        </div>
+      </div>
+      
       {/* Featured Destinations Grid */}
       <FeaturedDestinations />
       

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import GoogleAuth from '../components/GoogleAuth';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -57,6 +58,14 @@ const Register = () => {
     }
     
     setIsLoading(false);
+  };
+
+  const handleGoogleSuccess = (data) => {
+    navigate('/');
+  };
+
+  const handleGoogleError = (error) => {
+    console.error('Google signup error:', error);
   };
 
   return (
@@ -174,6 +183,23 @@ const Register = () => {
               )}
             </button>
           </div>
+
+          {/* Social login divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or sign up with</span>
+            </div>
+          </div>
+
+          {/* Google OAuth */}
+          <GoogleAuth 
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            disabled={isLoading}
+          />
 
           <div className="text-center">
             <p className="text-sm text-secondary-600">

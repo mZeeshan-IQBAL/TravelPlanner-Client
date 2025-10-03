@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // Import pages
@@ -67,7 +68,8 @@ const AdminOnly = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <SocketProvider>
+        <Router>
         <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
           <Routes>
             {/* Public routes */}
@@ -215,7 +217,8 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
-      </Router>
+        </Router>
+      </SocketProvider>
     </AuthProvider>
   );
 }

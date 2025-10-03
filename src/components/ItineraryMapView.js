@@ -2,7 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import ExpenseModal from './ExpenseModal';
+import PlaceSearch from './PlaceSearch';
+import DroppableDay from './DroppableDay';
+import DraggablePlace from './DraggablePlace';
+import useTrip from '../hooks/useTrip';
 
 // Custom marker icons
 const createNumberedIcon = (number, color = '#FF6B35') => {
@@ -30,7 +36,7 @@ const createNumberedIcon = (number, color = '#FF6B35') => {
   });
 };
 
-const ItineraryMapView = ({ tripData, onUpdateTrip }) => {
+const ItineraryMapView = ({ tripData: initialTripData, onUpdateTrip }) => {
   const [selectedDay, setSelectedDay] = useState(1);
   const [budget, setBudget] = useState(3750.00);
   const [expenses, setExpenses] = useState([
@@ -49,6 +55,30 @@ const ItineraryMapView = ({ tripData, onUpdateTrip }) => {
     amount: '',
     category: 'food'
   });
+
+  // Use trip management hook
+  const {
+    tripData,
+    loading: tripLoading,
+    error: tripError,
+    addPlaceToDay,
+    removePlaceFromDay,
+    reorderPlacesInDay,
+    movePlaceBetweenDays,
+    addDay,
+    removeDay,
+    saveTrip
+  } = useTrip(initialTripData);
+
+  // Drag and drop state
+  const [activePlace, setActivePlace] = useState(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   // Mock trip data if none provided
   const defaultTripData = {
@@ -142,7 +172,8 @@ const ItineraryMapView = ({ tripData, onUpdateTrip }) => {
     return icons[category] || '💳';
   };
 
-  const recommendedPlaces = [
+  // State for recommended places
+  const [recommendedPlaces, setRecommendedPlaces] = useState([
     {
       _id: 'r1',
       name: 'Haupia Hut',
@@ -153,10 +184,103 @@ const ItineraryMapView = ({ tripData, onUpdateTrip }) => {
       name: 'Waikiki Beach',
       image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&h=200&fit=crop'
     }
-  ];
+  ]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+
+  // Load recommended places based on current trip location
+  useEffect(() => {
+    const loadRecommendations = async () => {
+      if (!tripData || !currentDayPlaces.length) return;
+      
+      try {
+        setLoadingRecommendations(true);
+        // Use the first place of current day as reference point
+        const referencePlace = currentDayPlaces[0];
+        const { placesAPI } = require('../services/api');
+        
+        const response = await placesAPI.search({
+          lat: referencePlace.lat,
+          lng: referencePlace.lng,
+          radius: 10000, // 10km radius
+          limit: 6
+        });
+        
+        if (response.data && response.data.data) {
+          const places = response.data.data
+            .filter(place => place.name && place.lat && place.lng)
+            .slice(0, 4)
+            .map(place => ({
+              _id: place.providerId,
+              name: place.name,
+              image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=300&h=200&fit=crop', // Default image
+              lat: place.lat,
+              lng: place.lng,
+              address: place.address,
+              type: place.type
+            }));
+          setRecommendedPlaces(places);
+        }
+      } catch (error) {
+        console.error('Failed to load recommendations:', error);
+        // Keep default recommendations on error
+      } finally {
+        setLoadingRecommendations(false);
+      }
+    };
+
+    loadRecommendations();
+  }, [tripData, selectedDay, currentDayPlaces]);
+
+  // Handle drag events
+  const handleDragStart = (event) => {
+    const { active } = event;
+    const { data } = active;
+    
+    if (data.current && data.current.type === 'place') {
+      setActivePlace(data.current.place);
+    }
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    setActivePlace(null);
+    
+    if (!over) return;
+    
+    const activeData = active.data.current;
+    const overData = over.data.current;
+    
+    if (!activeData || activeData.type !== 'place') return;
+    
+    const activePlaceId = activeData.place._id;
+    const activeDayNumber = activeData.dayNumber;
+    const activeIndex = activeData.index;
+    
+    // Moving within the same day (reordering)
+    if (overData && overData.type === 'place' && overData.dayNumber === activeDayNumber) {
+      const overIndex = overData.index;
+      if (activeIndex !== overIndex) {
+        reorderPlacesInDay(activeDayNumber, activeIndex, overIndex);
+      }
+    }
+    // Moving to a different day
+    else if (overData && overData.type === 'day' && overData.dayNumber !== activeDayNumber) {
+      movePlaceBetweenDays(activePlaceId, activeDayNumber, overData.dayNumber);
+    }
+    // Moving to a different day via another place
+    else if (overData && overData.type === 'place' && overData.dayNumber !== activeDayNumber) {
+      movePlaceBetweenDays(activePlaceId, activeDayNumber, overData.dayNumber);
+    }
+  };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <DndContext 
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="flex h-screen bg-gray-50">
       {/* Left Sidebar */}
       <div className="w-1/3 bg-white border-r border-gray-200 overflow-y-auto">
         {/* Header */}
@@ -173,8 +297,24 @@ const ItineraryMapView = ({ tripData, onUpdateTrip }) => {
 
           {/* Action Buttons */}
           <div className="flex space-x-2 mb-4">
-            <button className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors">
-              Start planning
+            <button 
+              onClick={() => {
+                if (tripData && tripData._id !== '1') {
+                  // Save existing trip
+                  saveTrip().then(() => {
+                    alert('Trip saved successfully!');
+                  }).catch((error) => {
+                    alert('Failed to save trip: ' + error.message);
+                  });
+                } else {
+                  // This is a demo, show planning instructions
+                  alert('This is a demo. To create a real trip, sign up for an account!');
+                }
+              }}
+              disabled={tripLoading}
+              className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors disabled:opacity-50"
+            >
+              {tripLoading ? 'Saving...' : (tripData && tripData._id !== '1' ? 'Save Trip' : 'Start planning')}
             </button>
             <button className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
               Get the app →
@@ -207,32 +347,30 @@ const ItineraryMapView = ({ tripData, onUpdateTrip }) => {
           </div>
         </div>
 
-        {/* Location Input */}
+        {/* Location Search */}
         <div className="p-4 border-b border-gray-100">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Enter a location"
-              className="w-full pl-4 pr-12 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            />
-            <div className="absolute right-3 top-3 flex space-x-1">
-              <button className="p-1 hover:bg-gray-100 rounded">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </button>
-              <button className="p-1 hover:bg-gray-100 rounded">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
+          <PlaceSearch 
+            placeholder="Search for places to add..."
+            onPlaceSelect={(place) => {
+              console.log('Place selected:', place);
+            }}
+            onAddPlace={(place) => {
+              addPlaceToDay(place, selectedDay);
+              // Show a brief success message
+              const dayName = tripData?.days?.find(d => d.day === selectedDay)?.date || `Day ${selectedDay}`;
+              alert(`Added ${place.name} to ${dayName}!`);
+            }}
+          />
         </div>
 
         {/* Recommended Places */}
         <div className="p-4 border-b border-gray-100">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Recommended places</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-gray-700">Recommended places</h3>
+            {loadingRecommendations && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-500"></div>
+            )}
+          </div>
           <div className="flex space-x-3">
             {recommendedPlaces.map((place) => (
               <div key={place._id} className="flex-1 relative group cursor-pointer">
@@ -241,40 +379,50 @@ const ItineraryMapView = ({ tripData, onUpdateTrip }) => {
                   alt={place.name}
                   className="w-full h-20 object-cover rounded-lg"
                 />
-                <button className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs font-bold">+</span>
+                <button 
+                  onClick={() => {
+                    addPlaceToDay(place, selectedDay);
+                    const dayName = tripData?.days?.find(d => d.day === selectedDay)?.date || `Day ${selectedDay}`;
+                    alert(`Added ${place.name} to ${dayName}!`);
+                  }}
+                  className="absolute top-2 right-2 w-6 h-6 bg-white hover:bg-orange-50 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                  title={`Add ${place.name} to your itinerary`}
+                >
+                  <span className="text-xs font-bold text-orange-600">+</span>
                 </button>
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent rounded-b-lg p-2">
-                  <p className="text-white text-xs font-medium">{place.name}</p>
+                  <p className="text-white text-xs font-medium truncate">{place.name}</p>
+                  {place.type && (
+                    <p className="text-white text-xs opacity-75 capitalize">{place.type}</p>
+                  )}
                 </div>
               </div>
             ))}
           </div>
+          {recommendedPlaces.length === 0 && !loadingRecommendations && (
+            <div className="text-center text-gray-500 text-sm py-4">
+              Add some places to see recommendations
+            </div>
+          )}
         </div>
 
-        {/* Day Navigation */}
+        {/* Day Navigation with Drag and Drop */}
         <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <button 
-              className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
-              onClick={() => setSelectedDay(1)}
-            >
-              <span className="text-sm">▶</span>
-              <span className="font-medium">Monday, March 8</span>
-            </button>
-            <button className="p-1 hover:bg-gray-100 rounded">•••</button>
+          <div className="mb-2">
+            <p className="text-xs text-gray-500 mb-2">💡 Drag and drop places to reorder them or move between days</p>
           </div>
-          
-          <div className="flex items-center justify-between mb-2">
-            <button 
-              className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
-              onClick={() => setSelectedDay(2)}
-            >
-              <span className="text-sm">▶</span>
-              <span className="font-medium">Tuesday, March 9</span>
-            </button>
-            <button className="p-1 hover:bg-gray-100 rounded">•••</button>
-          </div>
+          {tripData?.days?.map((day) => (
+            <DroppableDay
+              key={day.day}
+              day={day}
+              isSelected={selectedDay === day.day}
+              onDaySelect={setSelectedDay}
+              onRemovePlace={removePlaceFromDay}
+              onAddDay={addDay}
+              onRemoveDay={removeDay}
+              canRemoveDay={tripData.days.length > 1}
+            />
+          ))}
         </div>
 
         {/* Budget Section */}
@@ -401,6 +549,8 @@ const ItineraryMapView = ({ tripData, onUpdateTrip }) => {
           )}
         </MapContainer>
       </div>
+      
+      </div>
 
       {/* Expense Modal */}
       <ExpenseModal
@@ -408,7 +558,20 @@ const ItineraryMapView = ({ tripData, onUpdateTrip }) => {
         onClose={() => setShowExpenseForm(false)}
         onAddExpense={(expense) => setExpenses([...expenses, expense])}
       />
-    </div>
+      
+      {/* Drag overlay shows the currently dragged item */}
+      <DragOverlay>
+        {activePlace ? (
+          <DraggablePlace 
+            place={activePlace} 
+            index={0}
+            dayNumber={0}
+            isDragging={true} 
+            onRemove={() => {}} 
+          />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };
 
