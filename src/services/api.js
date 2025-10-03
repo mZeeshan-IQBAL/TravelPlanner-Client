@@ -194,4 +194,14 @@ export const hotelsAPI = {
   searchCities: (keyword) => api.get(`/hotels/cities?keyword=${encodeURIComponent(keyword)}`),
 };
 
+// AI API calls
+export const aiAPI = {
+  generateItinerary: (params) => api.post('/ai/itinerary', params),
+  generateSuggestions: (destination, interests = []) => 
+    api.post('/ai/suggestions', { destination, interests }),
+  optimizeRoute: (places) => api.post('/ai/optimize-route', { places }),
+  getBudgetEstimate: (destination, days, budgetLevel) => 
+    api.post('/ai/budget-estimate', { destination, days, budgetLevel }),
+};
+
 export default api;

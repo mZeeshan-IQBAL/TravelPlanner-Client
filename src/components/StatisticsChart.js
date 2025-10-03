@@ -150,12 +150,6 @@ const StatisticsChart = ({ stats, loading = false }) => {
     value: region.count
   })) || [];
 
-  const budgetOverview = [
-    {
-      label: 'Total Budget',
-      value: overview?.totalBudget || 0,
-    }
-  ];
 
   return (
     <div className="space-y-8">

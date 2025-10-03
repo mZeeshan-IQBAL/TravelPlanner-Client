@@ -169,9 +169,18 @@ const PlaceSearch = ({ onPlaceSelect, onAddPlace, placeholder = "Enter a locatio
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-500"></div>
           ) : (
             <>
-              <button className="p-1 hover:bg-gray-100 rounded">
+              <button 
+                className="p-1 hover:bg-orange-100 rounded text-orange-600 hover:text-orange-700 transition-colors" 
+                title="Auto-fill suggestions"
+                onClick={() => {
+                  const suggestions = ['restaurants near me', 'tourist attractions', 'hotels', 'museums', 'parks'];
+                  const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+                  setQuery(randomSuggestion);
+                  searchPlaces(randomSuggestion);
+                }}
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </button>
               <button className="p-1 hover:bg-gray-100 rounded">

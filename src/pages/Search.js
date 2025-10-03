@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
-import LoadingSpinner from '../components/LoadingSpinner';
 import AdvancedSearch from '../components/AdvancedSearch';
 import { countriesAPI, imagesAPI, weatherAPI, tripsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';

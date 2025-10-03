@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 
 const GoogleAuth = ({ onSuccess, onError, disabled = false }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
 
   const handleGoogleLogin = async () => {
     // Check if Google client ID is configured

@@ -36,68 +36,50 @@ const AdvancedSearch = ({ onResults, initialQuery = '' }) => {
     { value: 'budget.totalEstimated', label: 'Lowest Budget' }
   ];
 
-  // Debounced search function
-  const debouncedSearch = useCallback(
-    debounce(async (searchFilters) => {
-      try {
-        setLoading(true);
-        
-        // Clean up empty filters
-        const cleanFilters = Object.entries(searchFilters)
-          .reduce((acc, [key, value]) => {
-            if (value !== '' && value !== null && value !== undefined) {
-              acc[key] = value;
-            }
-            return acc;
-          }, {});
-
-        const response = await tripsAPI.advancedSearch(cleanFilters);
-        
-        if (onResults) {
-          onResults({
-            trips: response.data.data.trips,
-            pagination: response.data.data.pagination,
-            query: searchFilters
-          });
-        }
-      } catch (error) {
-        console.error('Search error:', error);
-        if (onResults) {
-          onResults({
-            trips: [],
-            pagination: null,
-            query: searchFilters,
-            error: error.message || 'Search failed'
-          });
-        }
-      } finally {
-        setLoading(false);
-      }
-    }, 500),
-    [onResults]
-  );
-
-  // Execute search when filters change (but not on mount with default empty filters)
+// Execute search when filters change (debounced)
   useEffect(() => {
     // Only search if there are actual filters or if q has content
     const hasContent = filters.q?.trim() || 
       Object.entries(filters).some(([key, value]) => 
         key !== 'q' && key !== 'sort' && value && value !== ''
       );
-    
-    if (hasContent) {
-      debouncedSearch(filters);
-    } else {
-      // Clear results when no filters are active
-      if (onResults) {
-        onResults({
-          trips: [],
-          pagination: null,
-          query: filters
-        });
+
+    const timeout = setTimeout(async () => {
+      if (!hasContent) {
+        if (onResults) {
+          onResults({ trips: [], pagination: null, query: filters });
+        }
+        return;
       }
-    }
-  }, [filters, debouncedSearch, onResults]);
+
+      try {
+        setLoading(true);
+        const cleanFilters = Object.entries(filters)
+          .reduce((acc, [key, value]) => {
+            if (value !== '' && value !== null && value !== undefined) acc[key] = value;
+            return acc;
+          }, {});
+
+        const response = await tripsAPI.advancedSearch(cleanFilters);
+        if (onResults) {
+          onResults({
+            trips: response.data.data.trips,
+            pagination: response.data.data.pagination,
+            query: filters,
+          });
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        if (onResults) {
+          onResults({ trips: [], pagination: null, query: filters, error: error.message || 'Search failed' });
+        }
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [filters, onResults]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
@@ -356,18 +338,5 @@ const AdvancedSearch = ({ onResults, initialQuery = '' }) => {
     </div>
   );
 };
-
-// Simple debounce utility
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
 
 export default AdvancedSearch;

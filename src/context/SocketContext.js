@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
@@ -19,10 +19,36 @@ export const SocketProvider = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const { user, token } = useAuth();
 
+  // Notification management - define before using in useEffect
+  const removeNotification = useCallback((notificationId) => {
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+  }, []);
+
+  const addNotification = useCallback((notification) => {
+    const notificationWithId = {
+      ...notification,
+      id: notification.id || Date.now(),
+      read: false,
+    };
+
+    setNotifications(prev => [notificationWithId, ...prev].slice(0, 50)); // Keep last 50 notifications
+
+    // Auto-remove non-critical notifications after 5 seconds
+    if (notification.priority !== 'high') {
+      setTimeout(() => {
+        removeNotification(notificationWithId.id);
+      }, 5000);
+    }
+  }, [removeNotification]);
+
   // Initialize socket connection
   useEffect(() => {
     if (user && token) {
-      const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+      // Socket.IO should connect to the server origin, not the /api path
+      const socketUrl = apiUrl.replace(/\/?api\/?$/i, '');
+
+      const newSocket = io(socketUrl, {
         auth: {
           token: token,
         },
@@ -157,29 +183,7 @@ export const SocketProvider = ({ children }) => {
       socket.off('weather:alert');
       socket.off('error');
     };
-  }, [socket, user]);
-
-  // Notification management
-  const addNotification = (notification) => {
-    const notificationWithId = {
-      ...notification,
-      id: notification.id || Date.now(),
-      read: false,
-    };
-
-    setNotifications(prev => [notificationWithId, ...prev].slice(0, 50)); // Keep last 50 notifications
-
-    // Auto-remove non-critical notifications after 5 seconds
-    if (notification.priority !== 'high') {
-      setTimeout(() => {
-        removeNotification(notificationWithId.id);
-      }, 5000);
-    }
-  };
-
-  const removeNotification = (notificationId) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
-  };
+  }, [socket, user, addNotification]);
 
   const markNotificationAsRead = (notificationId) => {
     setNotifications(prev => 

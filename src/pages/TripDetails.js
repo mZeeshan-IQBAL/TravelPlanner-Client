@@ -44,7 +44,7 @@ const TripDetails = () => {
   const [itLng, setItLng] = useState('');
   const [itineraryCost, setItineraryCost] = useState('');
 
-  const fetchTrip = async () => {
+  const fetchTrip = React.useCallback(async () => {
     try {
       setLoading(true);
       const resp = await tripsAPI.getById(id);
@@ -59,9 +59,9 @@ const TripDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  } , [id]);
 
-  useEffect(() => { fetchTrip(); /* eslint-disable-next-line */ }, [id]);
+  useEffect(() => { fetchTrip(); }, [fetchTrip]);
 
   // Realtime updates
   useEffect(() => {
@@ -77,7 +77,7 @@ const TripDetails = () => {
     return () => {
       try { s.off('trip:update', handler); leaveTripRoom(id); } catch (_) {}
     };
-  }, [id]);
+  }, [id, fetchTrip]);
 
   // Initialize tab from URL param
   useEffect(() => {

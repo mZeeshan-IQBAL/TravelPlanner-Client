@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { weatherAPI } from '../services/api';
 
 const WeatherWidget = ({ city, coordinates, compact = false }) => {
@@ -6,13 +6,7 @@ const WeatherWidget = ({ city, coordinates, compact = false }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (city || coordinates) {
-      fetchWeather();
-    }
-  }, [city, coordinates]);
-
-  const fetchWeather = async () => {
+  const fetchWeather = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -33,7 +27,13 @@ const WeatherWidget = ({ city, coordinates, compact = false }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [city, coordinates]);
+
+  useEffect(() => {
+    if (city || coordinates) {
+      fetchWeather();
+    }
+  }, [city, coordinates, fetchWeather]);
 
   const getWeatherIcon = (icon) => {
     const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`;

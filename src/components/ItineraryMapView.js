@@ -3,7 +3,6 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 import ExpenseModal from './ExpenseModal';
 import PlaceSearch from './PlaceSearch';
 import DroppableDay from './DroppableDay';
@@ -38,7 +37,7 @@ const createNumberedIcon = (number, color = '#FF6B35') => {
 
 const ItineraryMapView = ({ tripData: initialTripData, onUpdateTrip }) => {
   const [selectedDay, setSelectedDay] = useState(1);
-  const [budget, setBudget] = useState(3750.00);
+const [budget] = useState(3750.00);
   const [expenses, setExpenses] = useState([
     {
       id: 1,
@@ -60,7 +59,6 @@ const ItineraryMapView = ({ tripData: initialTripData, onUpdateTrip }) => {
   const {
     tripData,
     loading: tripLoading,
-    error: tripError,
     addPlaceToDay,
     removePlaceFromDay,
     reorderPlacesInDay,
@@ -142,9 +140,7 @@ const ItineraryMapView = ({ tripData: initialTripData, onUpdateTrip }) => {
   }, [trip, selectedDay]);
 
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const remainingBudget = budget - totalExpenses;
 
-  const addExpense = () => {
     if (newExpense.description && newExpense.amount) {
       const expense = {
         id: Date.now(),
@@ -157,7 +153,6 @@ const ItineraryMapView = ({ tripData: initialTripData, onUpdateTrip }) => {
       setNewExpense({ description: '', amount: '', category: 'food' });
       setShowExpenseForm(false);
     }
-  };
 
   const getCategoryIcon = (category) => {
     const icons = {

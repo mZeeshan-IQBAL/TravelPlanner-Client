@@ -13,8 +13,8 @@ const ExpenseTracker = ({ trip, onUpdateBudget, readOnly = false }) => {
   });
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Expense categories with icons
-  const categories = [
+// Expense categories with icons (memoized)
+  const categories = useMemo(() => ([
     { id: 'food', name: 'Food & Dining', icon: '🍽️', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
     { id: 'transport', name: 'Transportation', icon: '🚗', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
     { id: 'accommodation', name: 'Accommodation', icon: '🏨', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
@@ -23,7 +23,7 @@ const ExpenseTracker = ({ trip, onUpdateBudget, readOnly = false }) => {
     { id: 'health', name: 'Health & Insurance', icon: '🏥', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
     { id: 'entertainment', name: 'Entertainment', icon: '🎪', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' },
     { id: 'miscellaneous', name: 'Miscellaneous', icon: '📦', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' }
-  ];
+  ]), []);
 
   // Load expenses from backend; fall back to itinerary costs
   useEffect(() => {
