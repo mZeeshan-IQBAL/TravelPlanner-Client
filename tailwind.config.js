@@ -8,6 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Calmer blue primary palette
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',
@@ -21,6 +22,19 @@ module.exports = {
           900: '#1e3a8a',
           950: '#172554',
         },
+        // Slightly override orange so default orange utilities are less intense
+        orange: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
+        },
         secondary: {
           50: '#f8fafc',
           100: '#f1f5f9',
@@ -33,10 +47,34 @@ module.exports = {
           800: '#1e293b',
           900: '#0f172a',
           950: '#020617',
+        },
+        wanderlog: {
+          orange: '#f59e0b',
+          blue: '#4a90e2',
+          green: '#7ed321',
+          purple: '#9013fe',
+          red: '#d0021b',
+          yellow: '#f5a623',
         }
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+        '128': '32rem',
+      },
+      borderRadius: {
+        'xl': '1rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
+      },
+      boxShadow: {
+        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+        'medium': '0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        'large': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

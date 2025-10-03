@@ -53,7 +53,6 @@ export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   getProfile: () => api.get('/auth/me'),
   addSearchHistory: (country) => api.post('/auth/search-history', { country }),
-  requestVerification: () => api.post('/auth/request-verification'),
   requestPasswordReset: (email) => api.post('/auth/request-password-reset', { email }),
   resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
 };
@@ -61,6 +60,7 @@ export const authAPI = {
 // Countries API calls
 export const countriesAPI = {
   search: (name) => api.get(`/countries/search/${encodeURIComponent(name)}`),
+  publicSearch: (name) => api.get(`/countries/public/search/${encodeURIComponent(name)}`),
   getAll: () => api.get('/countries/all'),
   getByRegion: (region) => api.get(`/countries/region/${region}`),
   getByCode: (code) => api.get(`/countries/code/${code}`),
@@ -166,6 +166,32 @@ export const adminAPI = {
   updateUserRole: (userId, role) => api.patch(`/admin/users/${userId}/role`, { role }),
   listTrips: (page = 1, limit = 20) => api.get(`/admin/trips?page=${page}&limit=${limit}`),
   getAnalytics: () => api.get('/admin/analytics'),
+};
+
+// Guides API calls
+export const guidesAPI = {
+  getAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/guides${queryString ? `?${queryString}` : ''}`);
+  },
+  getById: (id) => api.get(`/guides/${id}`),
+  like: (id) => api.post(`/guides/${id}/like`),
+  getPopular: (limit = 10) => api.get(`/guides/stats/popular?limit=${limit}`),
+  getRecent: (limit = 10) => api.get(`/guides/stats/recent?limit=${limit}`),
+  getPopularTags: () => api.get(`/guides/tags/popular`),
+};
+
+// Hotels API calls
+export const hotelsAPI = {
+  searchHotels: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/hotels/search${queryString ? `?${queryString}` : ''}`);
+  },
+  getOffers: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/hotels/offers${queryString ? `?${queryString}` : ''}`);
+  },
+  searchCities: (keyword) => api.get(`/hotels/cities?keyword=${encodeURIComponent(keyword)}`),
 };
 
 export default api;

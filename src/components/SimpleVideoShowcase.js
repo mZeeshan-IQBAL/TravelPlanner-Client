@@ -1,0 +1,189 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+
+const SimpleVideoShowcase = () => {
+  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showPlayButton, setShowPlayButton] = useState(false);
+
+  const handlePlayClick = () => {
+    const video = videoRef.current;
+    if (video) {
+      video.play().then(() => {
+        setIsPlaying(true);
+        setShowPlayButton(false);
+      }).catch(error => {
+        console.error('Manual play failed:', error);
+      });
+    }
+  };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      // Add event listeners for debugging
+      const handleLoadStart = () => console.log('Video loading started');
+      const handleCanPlay = () => {
+        console.log('Video can play');
+        // Show play button immediately since autoplay is often blocked
+        setShowPlayButton(true);
+        // Try to play the video (will likely fail due to autoplay policy)
+        video.play().then(() => {
+          setIsPlaying(true);
+          setShowPlayButton(false);
+        }).catch(error => {
+          console.log('Autoplay blocked (normal behavior):', error.name);
+          setShowPlayButton(true);
+        });
+      };
+      const handleError = (e) => console.error('Video error:', e);
+      const handlePlay = () => console.log('Video is playing');
+      const handlePause = () => console.log('Video paused');
+      
+      video.addEventListener('loadstart', handleLoadStart);
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
+      video.addEventListener('play', handlePlay);
+      video.addEventListener('pause', handlePause);
+      
+      // Cleanup
+      return () => {
+        video.removeEventListener('loadstart', handleLoadStart);
+        video.removeEventListener('canplay', handleCanPlay);
+        video.removeEventListener('error', handleError);
+        video.removeEventListener('play', handlePlay);
+        video.removeEventListener('pause', handlePause);
+      };
+    }
+  }, []);
+  return (
+    <div className="bg-white dark:bg-secondary-900 py-16 lg:py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4 leading-tight">
+            Your itinerary and your map in one view
+          </h2>
+          <p className="text-lg text-secondary-600 max-w-2xl mx-auto leading-relaxed">
+            No more switching between different apps, tabs, and tools to keep track of your travel plans.
+          </p>
+        </div>
+
+        {/* Video Container - Simplified */}
+        <div className="max-w-4xl mx-auto mb-12">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-secondary-100 relative">
+            {/* Play button overlay */}
+            {showPlayButton && !isPlaying && (
+              <div 
+                className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center cursor-pointer z-10"
+                onClick={handlePlayClick}
+              >
+                <div className="bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-6 transition-all duration-200 transform hover:scale-105">
+                  <svg className="w-12 h-12 text-orange-500 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            )}
+            
+            <video
+              ref={videoRef}
+              className="w-full h-auto"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              style={{
+                outline: 'none',
+                border: 'none'
+              }}
+            >
+              <source 
+                src="https://res.cloudinary.com/dwtieckqh/video/upload/v1759491780/Screen_Recording_2025-10-03_163613_lvdfzg.mp4" 
+                type="video/mp4"
+              />
+              <div className="p-12 text-center">
+                <p className="text-gray-600 mb-4">Your browser does not support the video tag.</p>
+                <Link
+                  to="/itinerary-demo"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block"
+                >
+                  Try Live Demo →
+                </Link>
+              </div>
+            </video>
+          </div>
+        </div>
+
+        {/* Feature highlights below video */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+            <h3 className="text-base font-semibold text-secondary-900 mb-2">
+              Interactive Map
+            </h3>
+            <p className="text-secondary-600 text-sm leading-relaxed">
+              See all your destinations plotted with routes and detailed information
+            </p>
+          </div>
+
+          <div className="text-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-base font-semibold text-secondary-900 mb-2">
+              Day-by-Day Planning
+            </h3>
+            <p className="text-secondary-600 text-sm leading-relaxed">
+              Organize your trip by days with easy navigation and real-time updates
+            </p>
+          </div>
+
+          <div className="text-center">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+            <h3 className="text-base font-semibold text-secondary-900 mb-2">
+              Budget Tracking
+            </h3>
+            <p className="text-secondary-600 text-sm leading-relaxed">
+              Monitor expenses and manage your budget all in one integrated view
+            </p>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="text-center">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
+            <Link
+              to="/itinerary-demo"
+              className="btn-primary"
+            >
+              Try Live Demo
+            </Link>
+            <Link
+              to="/register"
+              className="btn-secondary flex items-center"
+            >
+              Get Started Free
+              <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SimpleVideoShowcase;

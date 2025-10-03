@@ -1,192 +1,352 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import ThemeToggle from './ThemeToggle';
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Avatar from "./Avatar";
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 dark:text-secondary-100">
-      {/* Navigation */}
-      <nav className="bg-white dark:bg-secondary-900 shadow-sm border-b border-secondary-200 dark:border-secondary-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Navbar */}
+      <nav className="w-full bg-white dark:bg-secondary-900 border-b border-gray-200 dark:border-secondary-800 z-50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo and brand */}
-            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-lg font-bold">✈️</span>
+            {/* Left: Logo */}
+            <Link
+              to="/"
+              className="flex items-center space-x-2 hover:opacity-90 transition-opacity"
+            >
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                <div className="w-4 h-4 bg-white rounded-md"></div>
               </div>
-              <h1 className="text-xl font-bold text-secondary-900 dark:text-secondary-100">
-                Travel Planner
-              </h1>
+              <span className="text-orange-500 text-xl font-bold tracking-tight">
+                wanderlog
+              </span>
             </Link>
-            
-            {/* Navigation links */}
-            <div className="hidden md:flex items-center space-x-1">
-              <Link
-                to="/"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/') 
-                    ? 'bg-primary-50 text-primary-700 border border-primary-200 dark:bg-secondary-800 dark:text-primary-300 dark:border-secondary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                Home
-              </Link>
-              <Link
-                to="/search"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/search') 
-                    ? 'bg-primary-50 text-primary-700 border border-primary-200 dark:bg-secondary-800 dark:text-primary-300 dark:border-secondary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                Search Countries
-              </Link>
-              <Link
-                to="/my-trips"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/my-trips') 
-                    ? 'bg-primary-50 text-primary-700 border border-primary-200 dark:bg-secondary-800 dark:text-primary-300 dark:border-secondary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                My Trips
-              </Link>
-              <Link
-                to="/dashboard"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/dashboard') 
-                    ? 'bg-primary-50 text-primary-700 border border-primary-200 dark:bg-secondary-800 dark:text-primary-300 dark:border-secondary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/profile"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/profile') 
-                    ? 'bg-primary-50 text-primary-700 border border-primary-200 dark:bg-secondary-800 dark:text-primary-300 dark:border-secondary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                Profile
-              </Link>
+
+            {/* Middle: Nav links + Search */}
+            <div className="flex items-center space-x-6 flex-1 justify-center">
+              {/* Main Nav */}
+              <div className="hidden lg:flex items-center space-x-6">
+                <Link
+                  to="/"
+                  className={`text-sm font-medium ${
+                    isActive("/") ? "text-orange-500 font-semibold" : "text-gray-900 dark:text-gray-200 hover:text-orange-500"
+                  }`}
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/guides"
+                  className={`text-sm font-medium ${
+                    isActive("/guides") ? "text-orange-500 font-semibold" : "text-gray-900 dark:text-gray-200 hover:text-orange-500"
+                  }`}
+                >
+                  Travel guides
+                </Link>
+                <Link
+                  to="/hotels"
+                  className={`text-sm font-medium ${
+                    isActive("/hotels") ? "text-orange-500 font-semibold" : "text-gray-900 dark:text-gray-200 hover:text-orange-500"
+                  }`}
+                >
+                  Hotels
+                </Link>
+              </div>
+
+              {/* Search Input */}
+              <div className="hidden md:block w-full max-w-md">
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Explore by destination"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-secondary-700 dark:bg-secondary-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* User menu */}
-            <div className="flex items-center space-x-3">
-              <ThemeToggle />
-              <div className="hidden sm:block">
-                <span className="text-sm text-secondary-600 dark:text-secondary-300">
-                  Welcome, <span className="font-medium text-secondary-900 dark:text-secondary-100">{user?.username}!</span>
-                </span>
-              </div>
-              
-              {/* Mobile menu button */}
-              <div className="md:hidden">
-                <button className="text-secondary-500 hover:text-secondary-700 p-2 rounded-md dark:text-secondary-300 dark:hover:text-secondary-100">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
-              
+            {/* Right side: Auth/User */}
+            <div className="flex items-center space-x-4">
+
+              {!user ? (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-gray-900 dark:text-gray-200 hover:text-orange-500 text-sm font-medium"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200"
+                  >
+                    Sign up
+                  </Link>
+                </>
+              ) : (
+                <div className="relative">
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center space-x-2 px-3 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-secondary-800 transition-all duration-200"
+                  >
+                    <Avatar
+                      src={user?.avatar?.publicId || user?.avatar?.url}
+                      alt={user?.username || user?.name}
+                      size="medium"
+                      showOnlineStatus={true}
+                    />
+                    <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {user?.username}
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-gray-500 dark:text-gray-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-secondary-900 rounded-2xl shadow-lg border border-gray-200 dark:border-secondary-800 py-2 z-50">
+                      <div className="px-4 py-3 border-b border-gray-200 dark:border-secondary-700">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {user?.username}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {user?.email}
+                        </p>
+                      </div>
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-secondary-800 transition-colors"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        👤 Profile Settings
+                      </Link>
+                      <Link
+                        to="/dashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-secondary-800 transition-colors"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        📊 Dashboard
+                      </Link>
+                      <hr className="my-2 border-gray-200 dark:border-secondary-700" />
+                      <button
+                        onClick={() => {
+                          logout();
+                          setUserMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/40 dark:text-red-400"
+                      >
+                        🚪 Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Mobile Hamburger */}
               <button
-                onClick={logout}
-                className="bg-secondary-100 text-secondary-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-secondary-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 transition-colors duration-200 dark:bg-secondary-800 dark:text-secondary-100 dark:hover:bg-secondary-700"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-2 rounded-xl text-gray-700 dark:text-gray-200 hover:text-orange-500 hover:bg-gray-100 dark:hover:bg-secondary-800 transition-all duration-200"
               >
-                Logout
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d={
+                      mobileMenuOpen
+                        ? "M6 18L18 6M6 6l12 12"
+                        : "M4 6h16M4 12h16M4 18h16"
+                    }
+                  />
+                </svg>
               </button>
             </div>
           </div>
 
-          {/* Mobile navigation menu */}
-          <div className="md:hidden border-t border-secondary-200 py-2 dark:border-secondary-800">
-            <div className="flex flex-col space-y-1">
-              <Link
-                to="/"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/') 
-                    ? 'bg-primary-50 text-primary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                Home
-              </Link>
-              <Link
-                to="/search"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/search') 
-                    ? 'bg-primary-50 text-primary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                Search Countries
-              </Link>
-              <Link
-                to="/my-trips"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/my-trips') 
-                    ? 'bg-primary-50 text-primary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                My Trips
-              </Link>
-              <Link
-                to="/dashboard"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/dashboard') 
-                    ? 'bg-primary-50 text-primary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/profile"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  isActive('/profile') 
-                    ? 'bg-primary-50 text-primary-700' 
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:text-primary-300 dark:hover:bg-secondary-800'
-                }`}
-              >
-                Profile
-              </Link>
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden border-t border-gray-200 dark:border-secondary-800 py-4 bg-white dark:bg-secondary-900">
+              <div className="flex flex-col space-y-2">
+                <Link
+                  to="/"
+                  className={`px-4 py-2 rounded text-sm font-medium ${
+                    isActive("/")
+                      ? "text-orange-500 font-semibold"
+                      : "text-gray-700 dark:text-gray-200 hover:text-orange-500"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/guides"
+                  className={`px-4 py-2 rounded text-sm font-medium ${
+                    isActive("/guides")
+                      ? "text-orange-500 font-semibold"
+                      : "text-gray-700 dark:text-gray-200 hover:text-orange-500"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Travel guides
+                </Link>
+                <Link
+                  to="/hotels"
+                  className={`px-4 py-2 rounded text-sm font-medium ${
+                    isActive("/hotels")
+                      ? "text-orange-500 font-semibold"
+                      : "text-gray-700 dark:text-gray-200 hover:text-orange-500"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Hotels
+                </Link>
+
+                {!user && (
+                  <>
+                    <Link
+                      to="/login"
+                      className="px-4 py-2 rounded text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-orange-500"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="px-4 py-2 rounded-full text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 text-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Sign up
+                    </Link>
+                  </>
+                )}
+                {user && (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className={`px-4 py-2 rounded text-sm font-medium ${
+                        isActive("/dashboard")
+                          ? "text-orange-500 font-semibold"
+                          : "text-gray-700 dark:text-gray-200 hover:text-orange-500"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      📊 Dashboard
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50"
+                    >
+                      🚪 Sign Out
+                    </button>
+                  </>
+                )}
+
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </nav>
 
-      {/* Main content */}
-      <main className="flex-1">
-        {children}
-      </main>
+      {/* Main Content */}
+      <main className="flex-1">{children}</main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-secondary-200 py-8 mt-16 dark:bg-secondary-900 dark:border-secondary-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex justify-center items-center space-x-2 mb-4">
-              <div className="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">✈️</span>
-              </div>
-              <span className="text-lg font-semibold text-secondary-900 dark:text-secondary-100">Travel Planner</span>
+      <footer className="bg-gray-50 border-t border-gray-200 dark:bg-secondary-900 dark:border-secondary-800 mt-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Column 1 - Wanderlog Links */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Wanderlog</h4>
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li><Link to="/hotels" className="hover:underline">Hotels</Link></li>
+                <li><Link to="/blog" className="hover:underline">Blog</Link></li>
+                <li><a href="/security" className="hover:underline">Report security issue</a></li>
+                <li><a href="/terms" className="hover:underline">Terms & Privacy</a></li>
+                <li><a href="/app" className="hover:underline">Mobile app</a></li>
+                <li><a href="/browser" className="hover:underline">Browser extension</a></li>
+                <li><a href="/budgeting" className="hover:underline">Travel budgeting</a></li>
+                <li><a href="/jobs" className="hover:underline">Jobs</a></li>
+                <li><a href="/contact" className="hover:underline">Contact us</a></li>
+                <li><a href="/disclosure" className="hover:underline">Google data disclosure</a></li>
+                <li><a href="/embed" className="hover:underline">How to embed a map</a></li>
+              </ul>
             </div>
-            <p className="text-secondary-600 text-sm dark:text-secondary-300">
-              Discover amazing destinations around the world with real-time weather and beautiful imagery.
-            </p>
-            <p className="text-secondary-500 text-xs mt-4 dark:text-secondary-400">
-              Built with ❤️ using the MERN stack • Weather by OpenWeatherMap • Images by Unsplash
-            </p>
+
+            {/* Column 2 - Guides */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Guides & Resources</h4>
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li><a href="/trip-planners" className="hover:underline">Trip planners</a></li>
+                <li><a href="/explore" className="hover:underline">Explore destinations</a></li>
+                <li><a href="/road-trips" className="hover:underline">Road trips</a></li>
+                <li><a href="/places" className="hover:underline">Best places by category</a></li>
+                <li><a href="/popular-search" className="hover:underline">Popular searches</a></li>
+                <li><a href="/weather" className="hover:underline">Weather</a></li>
+                <li><a href="/qna" className="hover:underline">Q&A</a></li>
+                <li><a href="/itinerary" className="hover:underline">Itinerary guides</a></li>
+                <li><a href="/maps" className="hover:underline">Maps</a></li>
+                <li><a href="/seasons" className="hover:underline">By season</a></li>
+                <li><a href="/destinations" className="hover:underline">By destination</a></li>
+              </ul>
+            </div>
+
+            {/* Column 3 - Get the App */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Get the app</h4>
+              <div className="flex flex-col space-y-3">
+                <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/6/67/App_Store_%28iOS%29_logo.svg" alt="Download on the App Store" className="w-36" />
+                </a>
+                <a href="https://play.google.com" target="_blank" rel="noopener noreferrer">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" className="w-36" />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom */}
+          <div className="mt-10 border-t border-gray-200 dark:border-secondary-800 pt-6 flex justify-center text-sm text-gray-600 dark:text-gray-400">
+            <p>Built with <span className="text-red-500">❤️</span> using the MERN stack from Zeeshan</p>
           </div>
         </div>
       </footer>

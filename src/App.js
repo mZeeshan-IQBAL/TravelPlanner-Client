@@ -8,6 +8,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Search from './pages/Search';
+import Guides from './pages/Guides';
+import GuideDetail from './pages/GuideDetail';
+import Hotels from './pages/Hotels';
 import MyTrips from './pages/MyTrips';
 import TripDetails from './pages/TripDetails';
 import Dashboard from './pages/Dashboard';
@@ -18,6 +21,9 @@ import ResetPassword from './pages/ResetPassword';
 import Planner from './pages/Planner';
 import PublicTrip from './pages/PublicTrip';
 import Admin from './pages/Admin';
+import TripPlanner from './components/TripPlanner';
+import ItineraryMapView from './components/ItineraryMapView';
+import ItineraryDemo from './pages/ItineraryDemo';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -62,9 +68,25 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-secondary-50">
+        <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
           <Routes>
             {/* Public routes */}
+            <Route 
+              path="/landing" 
+              element={<Home />} 
+            />
+            <Route 
+              path="/guides" 
+              element={<Guides />} 
+            />
+            <Route 
+              path="/guides/:id" 
+              element={<GuideDetail />} 
+            />
+            <Route 
+              path="/hotels" 
+              element={<Hotels />} 
+            />
             <Route 
               path="/login" 
               element={
@@ -149,6 +171,26 @@ function App() {
                   <Planner />
                 </ProtectedRoute>
               } 
+            />
+            <Route 
+              path="/trip-planner/:id" 
+              element={
+                <ProtectedRoute>
+                  <TripPlanner />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/itinerary-map" 
+              element={
+                <ProtectedRoute>
+                  <ItineraryMapView />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/itinerary-demo" 
+              element={<ItineraryDemo />} 
             />
             <Route 
               path="/admin" 

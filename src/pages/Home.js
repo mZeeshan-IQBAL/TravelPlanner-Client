@@ -1,95 +1,157 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
+import FeaturesShowcase from '../components/FeaturesShowcase';
+import SimpleVideoShowcase from '../components/SimpleVideoShowcase';
+import TestimonialsSection from '../components/TestimonialsSection';
+import FeaturedDestinations from '../components/FeaturedDestinations';
 
 const Home = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleQuickSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const quickDestinations = [
+    { name: 'Paris', flag: '🇫🇷', desc: 'City of Light' },
+    { name: 'Tokyo', flag: '🇯🇵', desc: 'Modern metropolis' },
+    { name: 'New York', flag: '🇺🇸', desc: 'The Big Apple' },
+    { name: 'London', flag: '🇬🇧', desc: 'Historic charm' },
+    { name: 'Rome', flag: '🇮🇹', desc: 'Eternal City' },
+    { name: 'Sydney', flag: '🇦🇺', desc: 'Harbor city' }
+  ];
 
   return (
     <Layout>
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center animate-fade-in">
-          <h1 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-4">
-            Plan Your Perfect Adventure
-          </h1>
-          <p className="text-xl text-secondary-600 mb-8 max-w-2xl mx-auto">
-            Discover amazing countries, check real-time weather conditions, and save your dream destinations with beautiful imagery
-          </p>
-          
-          <div className="flex flex-col sm:flex-row justify-center gap-4 sm:space-x-4">
-            <Link
-              to="/search"
-              className="bg-primary-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-primary-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-            >
-              <span className="flex items-center justify-center">
-                🔍 Start Exploring
-              </span>
-            </Link>
-            <Link
-              to="/my-trips"
-              className="border-2 border-primary-600 text-primary-600 px-8 py-4 rounded-lg text-lg font-medium hover:bg-primary-50 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-            >
-              <span className="flex items-center justify-center">
-                🧳 View My Trips
-              </span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Features Grid */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="card p-8 text-center animate-slide-up" style={{animationDelay: '0.1s'}}>
-            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">🌍</span>
-            </div>
-            <h3 className="text-xl font-semibold text-secondary-900 mb-3">
-              Explore Countries
-            </h3>
-            <p className="text-secondary-600 leading-relaxed">
-              Search and discover detailed information about countries worldwide including population, capital, and cultural insights
+      {/* Hero Section - Enhanced with Search */}
+      <div className="bg-gradient-to-br from-blue-50 via-white to-orange-50 dark:from-secondary-900 dark:via-secondary-900 dark:to-secondary-800 py-20 lg:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-secondary-900 mb-6 leading-tight">
+              Plan amazing trips with{' '}
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-wanderlog-orange to-primary-600">AI-powered insights</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-secondary-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+              Discover destinations, create detailed itineraries, track expenses, and collaborate with friends — all in one beautiful platform.
             </p>
-          </div>
-
-          <div className="card p-8 text-center animate-slide-up" style={{animationDelay: '0.2s'}}>
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">🌤️</span>
+            
+            {/* Search Bar */}
+            <div className="max-w-2xl mx-auto mb-8">
+              <form onSubmit={handleQuickSearch} className="relative">
+                <div className="flex items-center bg-white dark:bg-secondary-800 rounded-2xl shadow-lg border border-gray-200 dark:border-secondary-700 p-2 hover:shadow-xl transition-shadow duration-300">
+                  <div className="flex-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Where do you want to go? Try 'Paris', 'Japan', 'Italy'..."
+className="w-full pl-12 pr-4 py-4 text-lg border-0 rounded-l-xl focus:outline-none focus:ring-0 text-secondary-900 dark:text-secondary-100 placeholder-secondary-500 dark:placeholder-secondary-400 bg-transparent"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-gradient-to-r from-wanderlog-orange to-primary-500 text-white px-8 py-4 rounded-xl text-lg font-bold hover:from-orange-600 hover:to-primary-600 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                    disabled={!searchQuery.trim()}
+                  >
+                    Search
+                  </button>
+                </div>
+              </form>
             </div>
-            <h3 className="text-xl font-semibold text-secondary-900 mb-3">
-              Real-time Weather
-            </h3>
-            <p className="text-secondary-600 leading-relaxed">
-              Get current weather conditions and detailed 5-day forecasts for any destination you're planning to visit
-            </p>
-          </div>
-
-          <div className="card p-8 text-center animate-slide-up" style={{animationDelay: '0.3s'}}>
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">📸</span>
+            
+            {/* Quick Destination Buttons */}
+            <div className="flex flex-wrap justify-center gap-3 mb-12">
+              <p className="w-full text-sm text-secondary-500 mb-4">Popular destinations:</p>
+              {quickDestinations.map((dest) => (
+                <button
+                  key={dest.name}
+                  onClick={() => navigate(`/search?q=${encodeURIComponent(dest.name)}`)}
+                  className="inline-flex items-center px-4 py-2 bg-white hover:bg-secondary-50 border border-secondary-200 hover:border-primary-300 rounded-full text-sm font-medium text-secondary-700 hover:text-primary-600 transition-all duration-200 hover:shadow-md"
+                >
+                  <span className="mr-2">{dest.flag}</span>
+                  {dest.name}
+                </button>
+              ))}
             </div>
-            <h3 className="text-xl font-semibold text-secondary-900 mb-3">
-              Stunning Imagery
-            </h3>
-            <p className="text-secondary-600 leading-relaxed">
-              Discover beautiful, high-quality photos of destinations from professional photographers around the world
-            </p>
-          </div>
-        </div>
+            
+            {/* Main CTA Buttons */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
+              {user ? (
+                <>
+                  <Link
+                    to="/my-trips"
+                    className="bg-wanderlog-orange hover:bg-orange-600 text-white px-8 py-4 rounded-full text-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  >
+                    ✈️ My Trips
+                  </Link>
+                  <Link
+                    to="/search"
+                    className="bg-white hover:bg-secondary-50 text-secondary-700 hover:text-secondary-900 px-8 py-4 rounded-full text-lg font-medium border-2 border-secondary-200 hover:border-primary-300 transition-all duration-200 transform hover:scale-105"
+                  >
+                    🔍 Discover Places
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/register"
+                    className="bg-wanderlog-orange hover:bg-orange-600 text-white px-8 py-4 rounded-full text-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  >
+                    Start Planning Free
+                  </Link>
+                  <Link
+                    to="/search"
+                    className="bg-white hover:bg-secondary-50 text-secondary-700 hover:text-secondary-900 px-8 py-4 rounded-full text-lg font-medium border-2 border-secondary-200 hover:border-primary-300 transition-all duration-200 transform hover:scale-105"
+                  >
+                    Explore Without Account
+                  </Link>
+                </>
+              )}
+            </div>
 
-        {/* Email verification banner */}
-        {user && user.emailVerified === false && (
-          <div className="card p-4 mb-10 border border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="font-medium text-yellow-800 dark:text-yellow-300">Verify your email</div>
-                <div className="text-sm text-yellow-700 dark:text-yellow-400">Please verify your email to secure your account. Click the button to resend a verification link (printed to server logs in dev).</div>
+            {/* Trust Indicators */}
+            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-secondary-500">
+              <div className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Free to get started
               </div>
-              <ResendVerificationButton />
+              <div className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Works offline
+              </div>
+              <div className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Collaborate with friends
+              </div>
             </div>
           </div>
-        )}
+        </div>
+      </div>
+      
+      {/* Features Showcase */}
+      <FeaturesShowcase />
+      
+      {/* Itinerary Video Showcase */}
+      <SimpleVideoShowcase />
+
+      {/* Featured Destinations Grid */}
+      <FeaturedDestinations />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 
         {/* Recent Search History */}
         {user?.searchHistory && user.searchHistory.length > 0 && (
@@ -131,56 +193,101 @@ const Home = () => {
           </div>
         )}
 
-        {/* Call to Action for new users */}
-        {(!user?.searchHistory || user.searchHistory.length === 0) && (
-          <div className="mt-20">
-            <div className="card p-12 text-center bg-gradient-to-br from-primary-50 to-blue-50 border-primary-200">
-              <div className="w-20 h-20 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-3xl">🚀</span>
+        {/* Enhanced Call to Action */}
+        <div className="mt-20">
+          <div className="bg-gradient-to-r from-wanderlog-orange via-primary-500 to-wanderlog-blue rounded-3xl p-12 text-center text-white relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-10 left-10 w-20 h-20 rounded-full border-2 border-white"></div>
+              <div className="absolute top-20 right-20 w-16 h-16 rounded-full border-2 border-white"></div>
+              <div className="absolute bottom-20 left-1/4 w-12 h-12 rounded-full border-2 border-white"></div>
+              <div className="absolute bottom-10 right-10 w-24 h-24 rounded-full border-2 border-white"></div>
+            </div>
+            
+            <div className="relative z-10">
+              <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-4xl">✈️</span>
               </div>
-              <h3 className="text-2xl font-bold text-secondary-900 mb-4">
-                Ready for Your First Adventure?
+              
+              <h3 className="text-3xl md:text-4xl font-bold mb-4">
+                {user ? 'Plan Your Next Adventure' : 'Join Thousands of Happy Travelers'}
               </h3>
-              <p className="text-secondary-600 mb-6 max-w-md mx-auto">
-                Start by searching for a country you've always wanted to visit. Get weather info, see beautiful photos, and save it to your trip collection.
+              
+              <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
+                {user 
+                  ? 'Create detailed itineraries, discover hidden gems, and make memories that last a lifetime.'
+                  : 'Start planning amazing trips with our AI-powered travel assistant. Free to get started, easy to use, and loved by travelers worldwide.'
+                }
               </p>
-              <Link
-                to="/search"
-                className="inline-flex items-center bg-primary-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-200"
-              >
-                <span className="mr-2">🔍</span>
-                Search Your First Country
-              </Link>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                {user ? (
+                  <>
+                    <Link
+                      to="/search"
+                      className="bg-white text-secondary-900 px-8 py-4 rounded-full text-lg font-bold hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                      🌍 Start Planning
+                    </Link>
+                    <Link
+                      to="/my-trips"
+                      className="border-2 border-white text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-white hover:text-secondary-900 transition-all duration-200"
+                    >
+                      📋 My Trips
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/register"
+                      className="bg-white text-secondary-900 px-8 py-4 rounded-full text-lg font-bold hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                      🚀 Get Started Free
+                    </Link>
+                    <Link
+                      to="/search"
+                      className="border-2 border-white text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-white hover:text-secondary-900 transition-all duration-200"
+                    >
+                      👀 Try Without Account
+                    </Link>
+                  </>
+                )}
+              </div>
+              
+              {/* Feature highlights */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 pt-8 border-t border-white/20">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                    <span className="text-2xl">🗺️</span>
+                  </div>
+                  <h4 className="font-semibold mb-2">Smart Itineraries</h4>
+                  <p className="text-sm text-white/80">AI-powered suggestions for the perfect trip</p>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                    <span className="text-2xl">💰</span>
+                  </div>
+                  <h4 className="font-semibold mb-2">Budget Tracking</h4>
+                  <p className="text-sm text-white/80">Keep your spending on track effortlessly</p>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                    <span className="text-2xl">👥</span>
+                  </div>
+                  <h4 className="font-semibold mb-2">Collaborate</h4>
+                  <p className="text-sm text-white/80">Plan together with friends and family</p>
+                </div>
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
+      
+      {/* Testimonials and Press */}
+      <TestimonialsSection />
     </Layout>
   );
 };
 
-const ResendVerificationButton = () => {
-  const [sending, setSending] = React.useState(false);
-  const [msg, setMsg] = React.useState('');
-  const { loadUser } = useAuth();
-  const onClick = async () => {
-    setSending(true);
-    try {
-      await (await import('../services/api')).authAPI.requestVerification();
-      await loadUser();
-      setMsg('Link sent (check server logs in dev)');
-    } catch (e) {
-      setMsg(e.message || 'Failed to send');
-    } finally {
-      setSending(false);
-    }
-  };
-  return (
-    <div className="flex flex-col items-end">
-      <button className="btn-primary" onClick={onClick} disabled={sending}>{sending ? 'Sending...' : 'Resend link'}</button>
-      {msg && <div className="text-xs text-secondary-600 mt-1 dark:text-secondary-400">{msg}</div>}
-    </div>
-  );
-};
 
 export default Home;

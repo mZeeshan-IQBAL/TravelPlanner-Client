@@ -2,7 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+// Ensure any prior dark-mode class is cleared (toggle removed)
+try {
+  document.documentElement.classList.remove('dark');
+  localStorage.removeItem('theme');
+} catch (_) {}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -11,14 +15,3 @@ root.render(
   </React.StrictMode>
 );
 
-// Register a basic service worker for offline itinerary access
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').catch(() => {});
-  });
-}
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
