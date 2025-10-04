@@ -41,7 +41,22 @@ const Profile = () => {
         {message && <div className="mb-4 text-sm text-secondary-700 dark:text-secondary-300">{message}</div>}
         <div className="card p-6 space-y-4">
           <div className="flex items-center gap-4">
-            <img src={user?.avatarUrl || 'https://www.gravatar.com/avatar/?d=mp'} alt="avatar" className="w-16 h-16 rounded-full object-cover border border-secondary-200 dark:border-secondary-700" />
+            {(() => {
+              const rawUrl = user?.avatar?.url || user?.avatar?.thumbnailUrl || user?.avatarUrl;
+              const apiBase = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
+              const serverOrigin = apiBase.replace(/\/api$/, '');
+              const finalUrl = rawUrl
+                ? (rawUrl.startsWith('http') ? rawUrl : `${serverOrigin}${rawUrl}`)
+                : 'https://www.gravatar.com/avatar/?d=mp';
+              return (
+                <img
+                  src={finalUrl}
+                  alt="avatar"
+                  className="w-16 h-16 rounded-full object-cover border border-secondary-200 dark:border-secondary-700"
+                  onError={(e) => { e.currentTarget.src = 'https://www.gravatar.com/avatar/?d=mp'; }}
+                />
+              );
+            })()}
             <div>
               <label className="btn-secondary inline-block cursor-pointer">
                 {uploading ? 'Uploading...' : 'Upload Avatar'}

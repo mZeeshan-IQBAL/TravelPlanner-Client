@@ -82,7 +82,14 @@ const Guides = () => {
       try {
         setLoading(true);
         const response = await guidesAPI.getAll();
-        setGuides(response.data.guides || []);
+        
+        // Normalize the data structure - convert _id to id for consistency
+        const normalizedGuides = (response.data.guides || []).map(guide => ({
+          ...guide,
+          id: guide._id || guide.id // Use _id from MongoDB, fallback to id if it exists
+        }));
+        
+        setGuides(normalizedGuides);
         setError(null);
         
         // Check if data is from database or sample data

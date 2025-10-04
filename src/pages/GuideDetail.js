@@ -212,7 +212,15 @@ const GuideDetail = () => {
       try {
         setLoading(true);
         const response = await guidesAPI.getById(id);
-        setGuide(response.data);
+        
+        // Normalize the database response format
+        const normalizedGuide = {
+          ...response.data,
+          id: response.data._id || response.data.id, // Use _id from MongoDB
+          created: response.data.createdAt || response.data.created // Use createdAt from MongoDB
+        };
+        
+        setGuide(normalizedGuide);
       } catch (error) {
         console.error('Failed to fetch guide from API:', error);
         // Fallback to sample data
@@ -389,24 +397,24 @@ const GuideDetail = () => {
         </div>
 
         {/* Guide Content */}
-        <div className="prose prose-lg max-w-none dark:prose-invert">
+        <div className="max-w-none">
           <div className="bg-white dark:bg-secondary-800 p-8 rounded-2xl shadow-soft">
             {guide.content.split('\n').map((line, index) => {
               if (line.startsWith('# ')) {
                 return (
-                  <h1 key={index} className="text-3xl font-bold mb-6 text-secondary-900 dark:text-secondary-100">
+                  <h1 key={index} className="text-2xl font-bold mb-4 text-secondary-900 dark:text-secondary-100">
                     {line.substring(2)}
                   </h1>
                 );
               } else if (line.startsWith('## ')) {
                 return (
-                  <h2 key={index} className="text-2xl font-semibold mt-8 mb-4 text-secondary-800 dark:text-secondary-200">
+                  <h2 key={index} className="text-xl font-semibold mt-6 mb-3 text-secondary-800 dark:text-secondary-200">
                     {line.substring(3)}
                   </h2>
                 );
               } else if (line.startsWith('### ')) {
                 return (
-                  <h3 key={index} className="text-xl font-semibold mt-6 mb-3 text-secondary-700 dark:text-secondary-300">
+                  <h3 key={index} className="text-lg font-semibold mt-4 mb-2 text-secondary-700 dark:text-secondary-300">
                     {line.substring(4)}
                   </h3>
                 );
@@ -414,32 +422,32 @@ const GuideDetail = () => {
                 const match = line.match(/- \*\*(.*?)\*\*: (.*)/);
                 if (match) {
                   return (
-                    <li key={index} className="mb-2">
-                      <strong className="text-secondary-900 dark:text-secondary-100">{match[1]}</strong>: {match[2]}
+                    <li key={index} className="mb-1 text-sm">
+                      <strong className="text-secondary-900 dark:text-secondary-100">{match[1]}</strong>: <span className="text-secondary-700 dark:text-secondary-300">{match[2]}</span>
                     </li>
                   );
                 }
                 // If regex doesn't match, treat it as a regular list item
                 return (
-                  <li key={index} className="mb-1 text-secondary-700 dark:text-secondary-300">
+                  <li key={index} className="mb-1 text-sm text-secondary-700 dark:text-secondary-300">
                     {line.substring(2)}
                   </li>
                 );
               } else if (line.startsWith('- ')) {
                 return (
-                  <li key={index} className="mb-1 text-secondary-700 dark:text-secondary-300">
+                  <li key={index} className="mb-1 text-sm text-secondary-700 dark:text-secondary-300">
                     {line.substring(2)}
                   </li>
                 );
               } else if (line.match(/^\d+\./)) {
                 return (
-                  <li key={index} className="mb-2 text-secondary-700 dark:text-secondary-300">
+                  <li key={index} className="mb-1 text-sm text-secondary-700 dark:text-secondary-300">
                     {line}
                   </li>
                 );
               } else if (line.trim()) {
                 return (
-                  <p key={index} className="mb-4 text-secondary-700 dark:text-secondary-300 leading-relaxed">
+                  <p key={index} className="mb-3 text-sm text-secondary-700 dark:text-secondary-300 leading-relaxed">
                     {line}
                   </p>
                 );
