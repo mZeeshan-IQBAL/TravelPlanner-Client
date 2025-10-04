@@ -12,7 +12,9 @@ const PublicTrip = () => {
     (async () => {
       try {
         setLoading(true);
-        const base = process.env.REACT_APP_API_URL || '/api';
+        const base = (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_FORCE_API_URL)
+          ? '/api'
+          : (process.env.REACT_APP_API_URL || '/api');
         const resp = await axios.get(`${base}/public/trips/${encodeURIComponent(token)}`);
         setTrip(resp.data.data);
       } catch (e) {

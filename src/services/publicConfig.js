@@ -9,7 +9,8 @@ const FALLBACK_CONFIG = {
   cloudinaryUploadPreset: process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || null,
 };
 
-const API_BASE = (process.env.REACT_APP_API_URL || '/api').replace(/\/$/, '');
+const USE_PROXY = process.env.NODE_ENV === 'development' && !process.env.REACT_APP_FORCE_API_URL;
+const API_BASE = (USE_PROXY ? '/api' : (process.env.REACT_APP_API_URL || '/api')).replace(/\/$/, '');
 
 async function fetchJSON(url) {
   const res = await fetch(url, {

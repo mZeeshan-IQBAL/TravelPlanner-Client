@@ -1,8 +1,12 @@
 import axios from 'axios';
 
+// Determine API base URL. In development, prefer CRA proxy unless explicitly forced.
+const USE_PROXY = process.env.NODE_ENV === 'development' && !process.env.REACT_APP_FORCE_API_URL;
+const API_BASE = USE_PROXY ? '/api' : (process.env.REACT_APP_API_URL || '/api');
+
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || '/api',
+  baseURL: API_BASE,
   timeout: 30000, // 30 seconds
   // Don't set Content-Type globally so FormData uploads work (browser sets multipart boundary)
 });

@@ -6,7 +6,9 @@ export function getSocket() {
   if (socket) return socket;
   const token = localStorage.getItem('token');
   if (!token) return null;
-  const base = process.env.REACT_APP_API_URL?.replace('/api','') || window.location.origin;
+  const base = (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_FORCE_API_URL)
+    ? window.location.origin
+    : (process.env.REACT_APP_API_URL?.replace('/api','') || window.location.origin);
   socket = io(base, {
     auth: { token },
     autoConnect: true,
