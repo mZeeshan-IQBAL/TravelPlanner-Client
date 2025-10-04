@@ -2,20 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const ItineraryVideoShowcase = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [videoError, setVideoError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showFallback, setShowFallback] = useState(false);
   const videoRef = React.useRef(null);
 
-  const handleVideoPlay = () => {
-    setIsPlaying(true);
-  };
-
   const handleVideoError = (e) => {
     console.error('Video error:', e);
     console.error('Error details:', e.target.error);
-    setVideoError(true);
     setIsLoading(false);
     // Delay showing fallback to avoid flash
     setTimeout(() => setShowFallback(true), 1000);
@@ -24,23 +17,12 @@ const ItineraryVideoShowcase = () => {
   const handleVideoLoad = () => {
     console.log('Video loaded successfully');
     setIsLoading(false);
-    setVideoError(false);
     setShowFallback(false);
   };
 
   const handleCanPlay = () => {
     console.log('Video can play');
     setIsLoading(false);
-    setVideoError(false);
-  };
-
-  const handlePlayClick = () => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(e => {
-        console.error('Play failed:', e);
-        setVideoError(true);
-      });
-    }
   };
 
   return (
@@ -68,7 +50,6 @@ const ItineraryVideoShowcase = () => {
                     className="w-full h-auto"
                     controls
                     poster="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&h=600&fit=crop"
-                    onPlay={handleVideoPlay}
                     onError={handleVideoError}
                     onLoadedData={handleVideoLoad}
                     onCanPlay={handleCanPlay}

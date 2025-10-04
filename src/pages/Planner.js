@@ -17,7 +17,7 @@ const fitToMarkers = (map, points) => {
 
 const Planner = () => {
   const { id } = useParams();
-  const { user, isAuthenticated, login, register } = useAuth();
+  const { isAuthenticated, login, register } = useAuth();
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -70,7 +70,7 @@ const Planner = () => {
     return () => {
       try { s.off('trip:update', handler); leaveTripRoom(id); } catch (_) {}
     };
-  }, [id]);
+  }, [id, fetchTrip]);
 
   const days = useMemo(() => {
     // If plannedDates exist, derive days from date range; otherwise from itinerary day numbers
@@ -157,7 +157,7 @@ const Planner = () => {
   };
 
   // Auto-fill suggestions based on common travel destinations and trip context
-  const getAutoFillSuggestions = () => {
+  const getAutoFillSuggestions = React.useCallback(() => {
     const commonPlaces = [
       'restaurants near me',
       'tourist attractions',
@@ -187,7 +187,7 @@ const Planner = () => {
     }
     
     return commonPlaces;
-  };
+  }, [itemsForActiveDay]);
 
   const handleAutoFillSelect = (suggestion) => {
     setPlaceQuery(suggestion);
@@ -325,34 +325,25 @@ const Planner = () => {
     }
   };
 
-  // Enhanced auto-fill with AI suggestions
-  const getAIEnhancedSuggestions = async () => {
+  // Build suggestions list (AI-enhanced when trip is available)
+  const aiSuggestionList = useMemo(() => {
     if (!trip) return getAutoFillSuggestions();
-    
-    try {
-      const destination = trip.title.includes('trip') 
-        ? trip.title.replace(/\s+trip.*$/i, '').trim()
-        : trip.title;
-      
-      const existingPlaces = itemsForActiveDay.map(item => item.title).join(', ');
-      const interests = aiPreferences.interests.length > 0 ? aiPreferences.interests : ['general'];
-      
-      // For now, return enhanced static suggestions with context
-      const baseSuggestions = getAutoFillSuggestions();
-      const aiEnhanced = [
-        `best restaurants in ${destination}`,
-        `top attractions in ${destination}`,
-        `hidden gems in ${destination}`,
-        `${interests[0]} activities in ${destination}`,
-        ...baseSuggestions.slice(0, 6)
-      ];
-      
-      return aiEnhanced;
-    } catch (error) {
-      console.error('AI suggestions failed:', error);
-      return getAutoFillSuggestions();
-    }
-  };
+
+    const destination = trip.title.includes('trip') 
+      ? trip.title.replace(/\s+trip.*$/i, '').trim()
+      : trip.title;
+
+    const interests = aiPreferences.interests.length > 0 ? aiPreferences.interests : ['general'];
+    const baseSuggestions = getAutoFillSuggestions();
+
+    return [
+      `best restaurants in ${destination}`,
+      `top attractions in ${destination}`,
+      `hidden gems in ${destination}`,
+      `${interests[0]} activities in ${destination}`,
+      ...baseSuggestions.slice(0, 6)
+    ];
+  }, [trip, aiPreferences.interests, getAutoFillSuggestions]);
 
   // Close auto-fill suggestions when clicking outside
   useEffect(() => {
@@ -563,61 +554,22 @@ const Planner = () => {
                   </p>
                 </div>
                 <div className="p-2">
-                  {trip ? (
-                    React.useMemo(() => {
-                      const destination = trip.title.includes('trip') 
-                        ? trip.title.replace(/\s+trip.*$/i, '').trim()
-                        : trip.title;
-                      const interests = aiPreferences.interests.length > 0 ? aiPreferences.interests : ['general'];
-                      const baseSuggestions = getAutoFillSuggestions();
-                      
-                      return [
-                        `best restaurants in ${destination}`,
-                        `top attractions in ${destination}`,
-                        `hidden gems in ${destination}`,
-                        `${interests[0]} activities in ${destination}`,
-                        ...baseSuggestions.slice(0, 6)
-                      ];
-                    }, [trip.title, aiPreferences.interests]).map((suggestion, idx) => (
-                      <button 
-                        key={idx} 
-                        onClick={() => handleAutoFillSelect(suggestion)}
-                        className="group w-full text-left px-4 py-3 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors rounded-xl border border-transparent hover:border-primary-200 dark:hover:border-primary-700 mb-2 last:mb-0"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-primary-100 dark:from-purple-900/30 dark:to-primary-900/30 rounded-lg flex items-center justify-center group-hover:from-purple-200 group-hover:to-primary-200 dark:group-hover:from-purple-900/50 dark:group-hover:to-primary-900/50 transition-colors">
-                            <span className="text-sm">🪄</span>
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium text-secondary-900 dark:text-secondary-100 group-hover:text-primary-700 dark:group-hover:text-primary-300 text-sm">
-                              {suggestion}
-                            </div>
-                            <div className="text-xs text-purple-600 dark:text-purple-400">
-                              AI-enhanced suggestion
-                            </div>
-                          </div>
-                          <div className="text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  ) : (
-                    getAutoFillSuggestions().map((suggestion, idx) => (
+                  {aiSuggestionList.map((suggestion, idx) => (
                     <button 
                       key={idx} 
                       onClick={() => handleAutoFillSelect(suggestion)}
                       className="group w-full text-left px-4 py-3 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors rounded-xl border border-transparent hover:border-primary-200 dark:hover:border-primary-700 mb-2 last:mb-0"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50 transition-colors">
-                          <span className="text-sm">🔍</span>
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-primary-100 dark:from-purple-900/30 dark:to-primary-900/30 rounded-lg flex items-center justify-center group-hover:from-purple-200 group-hover:to-primary-200 dark:group-hover:from-purple-900/50 dark:group-hover:to-primary-900/50 transition-colors">
+                          <span className="text-sm">🪄</span>
                         </div>
                         <div className="flex-1">
                           <div className="font-medium text-secondary-900 dark:text-secondary-100 group-hover:text-primary-700 dark:group-hover:text-primary-300 text-sm">
                             {suggestion}
+                          </div>
+                          <div className="text-xs text-purple-600 dark:text-purple-400">
+                            AI-enhanced suggestion
                           </div>
                         </div>
                         <div className="text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -627,8 +579,7 @@ const Planner = () => {
                         </div>
                       </div>
                     </button>
-                  ))
-                  )}
+                  ))}
                 </div>
               </div>
             )}

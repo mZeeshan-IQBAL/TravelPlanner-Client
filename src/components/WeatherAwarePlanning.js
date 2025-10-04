@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { weatherAPI } from '../services/api';
 import WeatherWidget from './WeatherWidget';
 import WeatherForecast from './WeatherForecast';
@@ -8,13 +8,7 @@ const WeatherAwarePlanning = ({ destination, dates, onWeatherData }) => {
   const [recommendations, setRecommendations] = useState([]);
   const [alerts, setAlerts] = useState([]);
 
-  useEffect(() => {
-    if (destination) {
-      fetchWeatherData();
-    }
-  }, [destination, dates]);
-
-  const fetchWeatherData = async () => {
+  const fetchWeatherData = useCallback(async () => {
     try {
       // Get current weather and forecast
       const [currentResponse, forecastResponse] = await Promise.all([
@@ -26,140 +20,59 @@ const WeatherAwarePlanning = ({ destination, dates, onWeatherData }) => {
       const forecast = forecastResponse.data.data;
 
       setWeatherData({ current, forecast });
-      
-      // Generate recommendations based on weather
-      generateRecommendations(current, forecast);
-      
-      // Check for weather alerts
-      checkWeatherAlerts(current, forecast);
-      
+
+      // Build recommendations based on weather
+      const recs = [];
+      const avgTemp = forecast.forecast.reduce((sum, day) => sum + day.temperature.avg, 0) / forecast.forecast.length;
+      if (avgTemp > 25) {
+        recs.push({ type: 'clothing', title: 'Pack Light & Breathable Clothing', description: 'Light cotton fabrics, shorts, and breathable materials', icon: '👕', priority: 'medium' });
+        recs.push({ type: 'activity', title: 'Plan Indoor Activities', description: 'Consider museums, shopping centers, or indoor attractions during peak heat', icon: '🏛️', priority: 'low' });
+      } else if (avgTemp < 10) {
+        recs.push({ type: 'clothing', title: 'Pack Warm Clothing', description: 'Heavy jacket, thermal wear, gloves, and warm boots', icon: '🧥', priority: 'high' });
+      }
+      const rainyDays = forecast.forecast.filter(day => day.description.toLowerCase().includes('rain')).length;
+      if (rainyDays > 2) {
+        recs.push({ type: 'gear', title: 'Rain Gear Essential', description: 'Pack waterproof jacket, umbrella, and waterproof shoes', icon: '☔', priority: 'high' });
+        recs.push({ type: 'activity', title: 'Indoor Backup Plans', description: 'Research indoor activities and covered attractions', icon: '🏠', priority: 'medium' });
+      }
+      const windyDays = forecast.forecast.filter(day => day.windSpeed > 7).length;
+      if (windyDays > 2) {
+        recs.push({ type: 'activity', title: 'Avoid Outdoor Heights', description: 'Be cautious with observation decks, bridges, or outdoor climbing', icon: '🌬️', priority: 'medium' });
+      }
+      const avgHumidity = forecast.forecast.reduce((sum, day) => sum + day.humidity, 0) / forecast.forecast.length;
+      if (avgHumidity > 80) {
+        recs.push({ type: 'health', title: 'Stay Hydrated', description: 'High humidity can cause dehydration. Pack extra water and electrolytes', icon: '💧', priority: 'medium' });
+      }
+      setRecommendations(recs);
+
+      // Build weather alerts
+      const weatherAlerts = [];
+      forecast.forecast.forEach((day, index) => {
+        if (day.temperature.max > 35) {
+          weatherAlerts.push({ type: 'heat', severity: 'high', title: 'Extreme Heat Warning', message: `${day.date}: High temperature of ${day.temperature.max}°C expected`, day: index });
+        } else if (day.temperature.min < -5) {
+          weatherAlerts.push({ type: 'cold', severity: 'high', title: 'Extreme Cold Warning', message: `${day.date}: Low temperature of ${day.temperature.min}°C expected`, day: index });
+        }
+        if (day.windSpeed > 10) {
+          weatherAlerts.push({ type: 'wind', severity: 'medium', title: 'Strong Wind Advisory', message: `${day.date}: Wind speeds up to ${day.windSpeed} m/s expected`, day: index });
+        }
+      });
+      setAlerts(weatherAlerts);
+
       // Pass weather data to parent component
       if (onWeatherData) {
         onWeatherData({ current, forecast });
       }
-
     } catch (error) {
       console.error('Failed to fetch weather data:', error);
     }
-  };
+  }, [destination, onWeatherData]);
 
-  const generateRecommendations = (current, forecast) => {
-    const recs = [];
-
-    // Temperature-based recommendations
-    const avgTemp = forecast.forecast.reduce((sum, day) => sum + day.temperature.avg, 0) / forecast.forecast.length;
-    
-    if (avgTemp > 25) {
-      recs.push({
-        type: 'clothing',
-        title: 'Pack Light & Breathable Clothing',
-        description: 'Light cotton fabrics, shorts, and breathable materials',
-        icon: '👕',
-        priority: 'medium'
-      });
-      recs.push({
-        type: 'activity',
-        title: 'Plan Indoor Activities',
-        description: 'Consider museums, shopping centers, or indoor attractions during peak heat',
-        icon: '🏛️',
-        priority: 'low'
-      });
-    } else if (avgTemp < 10) {
-      recs.push({
-        type: 'clothing',
-        title: 'Pack Warm Clothing',
-        description: 'Heavy jacket, thermal wear, gloves, and warm boots',
-        icon: '🧥',
-        priority: 'high'
-      });
+  useEffect(() => {
+    if (destination) {
+      fetchWeatherData();
     }
-
-    // Rain-based recommendations
-    const rainyDays = forecast.forecast.filter(day => 
-      day.description.toLowerCase().includes('rain')
-    ).length;
-    
-    if (rainyDays > 2) {
-      recs.push({
-        type: 'gear',
-        title: 'Rain Gear Essential',
-        description: 'Pack waterproof jacket, umbrella, and waterproof shoes',
-        icon: '☔',
-        priority: 'high'
-      });
-      recs.push({
-        type: 'activity',
-        title: 'Indoor Backup Plans',
-        description: 'Research indoor activities and covered attractions',
-        icon: '🏠',
-        priority: 'medium'
-      });
-    }
-
-    // Wind-based recommendations
-    const windyDays = forecast.forecast.filter(day => day.windSpeed > 7).length;
-    if (windyDays > 2) {
-      recs.push({
-        type: 'activity',
-        title: 'Avoid Outdoor Heights',
-        description: 'Be cautious with observation decks, bridges, or outdoor climbing',
-        icon: '🌬️',
-        priority: 'medium'
-      });
-    }
-
-    // Humidity recommendations
-    const avgHumidity = forecast.forecast.reduce((sum, day) => sum + day.humidity, 0) / forecast.forecast.length;
-    if (avgHumidity > 80) {
-      recs.push({
-        type: 'health',
-        title: 'Stay Hydrated',
-        description: 'High humidity can cause dehydration. Pack extra water and electrolytes',
-        icon: '💧',
-        priority: 'medium'
-      });
-    }
-
-    setRecommendations(recs);
-  };
-
-  const checkWeatherAlerts = (current, forecast) => {
-    const weatherAlerts = [];
-
-    // Extreme temperature alerts
-    forecast.forecast.forEach((day, index) => {
-      if (day.temperature.max > 35) {
-        weatherAlerts.push({
-          type: 'heat',
-          severity: 'high',
-          title: 'Extreme Heat Warning',
-          message: `${day.date}: High temperature of ${day.temperature.max}°C expected`,
-          day: index,
-        });
-      } else if (day.temperature.min < -5) {
-        weatherAlerts.push({
-          type: 'cold',
-          severity: 'high',
-          title: 'Extreme Cold Warning',
-          message: `${day.date}: Low temperature of ${day.temperature.min}°C expected`,
-          day: index,
-        });
-      }
-
-      // Strong wind alerts
-      if (day.windSpeed > 10) {
-        weatherAlerts.push({
-          type: 'wind',
-          severity: 'medium',
-          title: 'Strong Wind Advisory',
-          message: `${day.date}: Wind speeds up to ${day.windSpeed} m/s expected`,
-          day: index,
-        });
-      }
-    });
-
-    setAlerts(weatherAlerts);
-  };
+  }, [destination, dates, fetchWeatherData]);
 
   const getPriorityColor = (priority) => {
     switch (priority) {

@@ -49,11 +49,6 @@ const [budget] = useState(3750.00);
     }
   ]);
   const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [newExpense, setNewExpense] = useState({
-    description: '',
-    amount: '',
-    category: 'food'
-  });
 
   // Use trip management hook
   const {
@@ -141,18 +136,6 @@ const [budget] = useState(3750.00);
 
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
-    if (newExpense.description && newExpense.amount) {
-      const expense = {
-        id: Date.now(),
-        ...newExpense,
-        amount: parseFloat(newExpense.amount),
-        date: new Date().toISOString().split('T')[0],
-        icon: getCategoryIcon(newExpense.category)
-      };
-      setExpenses([...expenses, expense]);
-      setNewExpense({ description: '', amount: '', category: 'food' });
-      setShowExpenseForm(false);
-    }
 
   const getCategoryIcon = (category) => {
     const icons = {
@@ -551,7 +534,13 @@ const [budget] = useState(3750.00);
       <ExpenseModal
         isOpen={showExpenseForm}
         onClose={() => setShowExpenseForm(false)}
-        onAddExpense={(expense) => setExpenses([...expenses, expense])}
+        onAddExpense={(expense) => setExpenses([
+          ...expenses,
+          { 
+            ...expense, 
+            icon: expense.icon || getCategoryIcon(expense.category || 'other')
+          }
+        ])}
       />
       
       {/* Drag overlay shows the currently dragged item */}

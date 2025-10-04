@@ -1,6 +1,78 @@
 import React, { useState, useEffect } from 'react';
-import { tripsAPI } from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
+
+const predefinedTemplates = [
+  {
+    id: 'weekend-city',
+    title: 'Weekend City Break',
+    description: 'Perfect for 2-3 day city exploration',
+    icon: '🏙️',
+    budget: { totalEstimated: 500, currency: 'USD' },
+    itinerary: [
+      { title: 'Arrive & Check-in', day: 1, startTime: '15:00', endTime: '17:00', notes: 'Hotel check-in and initial exploration' },
+      { title: 'City Walking Tour', day: 1, startTime: '18:00', endTime: '20:00', notes: 'Explore main attractions' },
+      { title: 'Local Restaurant Dinner', day: 1, startTime: '20:30', endTime: '22:00', cost: 50 },
+      { title: 'Museum Visit', day: 2, startTime: '10:00', endTime: '13:00', cost: 25 },
+      { title: 'Lunch at Local Café', day: 2, startTime: '13:30', endTime: '14:30', cost: 20 },
+      { title: 'Shopping District', day: 2, startTime: '15:00', endTime: '17:00', cost: 100 },
+      { title: 'Sunset Viewpoint', day: 2, startTime: '17:30', endTime: '18:30', notes: 'Best spot for city views' },
+      { title: 'Check-out & Departure', day: 3, startTime: '11:00', endTime: '12:00' }
+    ]
+  },
+  {
+    id: 'beach-vacation',
+    title: 'Beach Vacation',
+    description: 'Relaxing beach getaway for 5-7 days',
+    icon: '🏖️',
+    budget: { totalEstimated: 1200, currency: 'USD' },
+    itinerary: [
+      { title: 'Airport Transfer & Check-in', day: 1, startTime: '14:00', endTime: '16:00', cost: 50 },
+      { title: 'Beach Relaxation', day: 1, startTime: '16:30', endTime: '18:30', notes: 'First taste of the beach' },
+      { title: 'Beachfront Dinner', day: 1, startTime: '19:00', endTime: '21:00', cost: 80 },
+      { title: 'Beach Activities', day: 2, startTime: '09:00', endTime: '12:00', cost: 60, notes: 'Water sports, volleyball' },
+      { title: 'Spa Treatment', day: 2, startTime: '14:00', endTime: '16:00', cost: 150 },
+      { title: 'Boat Trip', day: 3, startTime: '09:00', endTime: '17:00', cost: 100, notes: 'Island hopping or coastal tour' },
+      { title: 'Local Market Visit', day: 4, startTime: '10:00', endTime: '12:00', cost: 40 },
+      { title: 'Beach Yoga', day: 4, startTime: '07:00', endTime: '08:00', cost: 25 },
+      { title: 'Farewell Dinner', day: 5, startTime: '19:00', endTime: '21:00', cost: 120 }
+    ]
+  },
+  {
+    id: 'adventure-mountain',
+    title: 'Mountain Adventure',
+    description: 'Outdoor adventure for nature lovers',
+    icon: '⛰️',
+    budget: { totalEstimated: 800, currency: 'USD' },
+    itinerary: [
+      { title: 'Arrive & Gear Check', day: 1, startTime: '12:00', endTime: '14:00', cost: 100, notes: 'Rent/check hiking equipment' },
+      { title: 'Easy Trail Hike', day: 1, startTime: '15:00', endTime: '17:30', notes: 'Acclimatization hike' },
+      { title: 'Campfire Dinner', day: 1, startTime: '18:30', endTime: '20:00', cost: 30 },
+      { title: 'Sunrise Hike', day: 2, startTime: '05:30', endTime: '09:00', notes: 'Best viewpoint for sunrise' },
+      { title: 'Mountain Biking', day: 2, startTime: '14:00', endTime: '17:00', cost: 80 },
+      { title: 'Rock Climbing', day: 3, startTime: '09:00', endTime: '15:00', cost: 120, notes: 'Guided climbing session' },
+      { title: 'Hot Springs Visit', day: 3, startTime: '16:00', endTime: '18:00', cost: 45 },
+      { title: 'Scenic Drive', day: 4, startTime: '10:00', endTime: '16:00', cost: 60, notes: 'Mountain passes and viewpoints' }
+    ]
+  },
+  {
+    id: 'cultural-heritage',
+    title: 'Cultural Heritage Tour',
+    description: 'Deep dive into local culture and history',
+    icon: '🏛️',
+    budget: { totalEstimated: 900, currency: 'USD' },
+    itinerary: [
+      { title: 'Historical City Center Tour', day: 1, startTime: '09:00', endTime: '13:00', cost: 40, notes: 'Guided walking tour' },
+      { title: 'Traditional Lunch', day: 1, startTime: '13:30', endTime: '15:00', cost: 35 },
+      { title: 'Art Museum Visit', day: 1, startTime: '15:30', endTime: '18:00', cost: 25 },
+      { title: 'Cultural Performance', day: 1, startTime: '19:30', endTime: '21:30', cost: 60 },
+      { title: 'Archaeological Site Visit', day: 2, startTime: '08:00', endTime: '14:00', cost: 50 },
+      { title: 'Local Craft Workshop', day: 2, startTime: '15:00', endTime: '17:00', cost: 75, notes: 'Learn traditional crafts' },
+      { title: 'Religious Site Tour', day: 3, startTime: '09:00', endTime: '12:00', cost: 20 },
+      { title: 'Traditional Market', day: 3, startTime: '14:00', endTime: '16:00', cost: 50, notes: 'Local products and souvenirs' },
+      { title: 'Cooking Class', day: 3, startTime: '17:00', endTime: '20:00', cost: 85 }
+    ]
+  }
+];
 
 const TripTemplates = ({ onSelectTemplate, onClose }) => {
   const [templates, setTemplates] = useState([]);
@@ -8,96 +80,24 @@ const TripTemplates = ({ onSelectTemplate, onClose }) => {
   const [message, setMessage] = useState('');
 
   // Predefined templates
-  const predefinedTemplates = [
-    {
-      id: 'weekend-city',
-      title: 'Weekend City Break',
-      description: 'Perfect for 2-3 day city exploration',
-      icon: '🏙️',
-      budget: { totalEstimated: 500, currency: 'USD' },
-      itinerary: [
-        { title: 'Arrive & Check-in', day: 1, startTime: '15:00', endTime: '17:00', notes: 'Hotel check-in and initial exploration' },
-        { title: 'City Walking Tour', day: 1, startTime: '18:00', endTime: '20:00', notes: 'Explore main attractions' },
-        { title: 'Local Restaurant Dinner', day: 1, startTime: '20:30', endTime: '22:00', cost: 50 },
-        { title: 'Museum Visit', day: 2, startTime: '10:00', endTime: '13:00', cost: 25 },
-        { title: 'Lunch at Local Café', day: 2, startTime: '13:30', endTime: '14:30', cost: 20 },
-        { title: 'Shopping District', day: 2, startTime: '15:00', endTime: '17:00', cost: 100 },
-        { title: 'Sunset Viewpoint', day: 2, startTime: '17:30', endTime: '18:30', notes: 'Best spot for city views' },
-        { title: 'Check-out & Departure', day: 3, startTime: '11:00', endTime: '12:00' }
-      ]
-    },
-    {
-      id: 'beach-vacation',
-      title: 'Beach Vacation',
-      description: 'Relaxing beach getaway for 5-7 days',
-      icon: '🏖️',
-      budget: { totalEstimated: 1200, currency: 'USD' },
-      itinerary: [
-        { title: 'Airport Transfer & Check-in', day: 1, startTime: '14:00', endTime: '16:00', cost: 50 },
-        { title: 'Beach Relaxation', day: 1, startTime: '16:30', endTime: '18:30', notes: 'First taste of the beach' },
-        { title: 'Beachfront Dinner', day: 1, startTime: '19:00', endTime: '21:00', cost: 80 },
-        { title: 'Beach Activities', day: 2, startTime: '09:00', endTime: '12:00', cost: 60, notes: 'Water sports, volleyball' },
-        { title: 'Spa Treatment', day: 2, startTime: '14:00', endTime: '16:00', cost: 150 },
-        { title: 'Boat Trip', day: 3, startTime: '09:00', endTime: '17:00', cost: 100, notes: 'Island hopping or coastal tour' },
-        { title: 'Local Market Visit', day: 4, startTime: '10:00', endTime: '12:00', cost: 40 },
-        { title: 'Beach Yoga', day: 4, startTime: '07:00', endTime: '08:00', cost: 25 },
-        { title: 'Farewell Dinner', day: 5, startTime: '19:00', endTime: '21:00', cost: 120 }
-      ]
-    },
-    {
-      id: 'adventure-mountain',
-      title: 'Mountain Adventure',
-      description: 'Outdoor adventure for nature lovers',
-      icon: '⛰️',
-      budget: { totalEstimated: 800, currency: 'USD' },
-      itinerary: [
-        { title: 'Arrive & Gear Check', day: 1, startTime: '12:00', endTime: '14:00', cost: 100, notes: 'Rent/check hiking equipment' },
-        { title: 'Easy Trail Hike', day: 1, startTime: '15:00', endTime: '17:30', notes: 'Acclimatization hike' },
-        { title: 'Campfire Dinner', day: 1, startTime: '18:30', endTime: '20:00', cost: 30 },
-        { title: 'Sunrise Hike', day: 2, startTime: '05:30', endTime: '09:00', notes: 'Best viewpoint for sunrise' },
-        { title: 'Mountain Biking', day: 2, startTime: '14:00', endTime: '17:00', cost: 80 },
-        { title: 'Rock Climbing', day: 3, startTime: '09:00', endTime: '15:00', cost: 120, notes: 'Guided climbing session' },
-        { title: 'Hot Springs Visit', day: 3, startTime: '16:00', endTime: '18:00', cost: 45 },
-        { title: 'Scenic Drive', day: 4, startTime: '10:00', endTime: '16:00', cost: 60, notes: 'Mountain passes and viewpoints' }
-      ]
-    },
-    {
-      id: 'cultural-heritage',
-      title: 'Cultural Heritage Tour',
-      description: 'Deep dive into local culture and history',
-      icon: '🏛️',
-      budget: { totalEstimated: 900, currency: 'USD' },
-      itinerary: [
-        { title: 'Historical City Center Tour', day: 1, startTime: '09:00', endTime: '13:00', cost: 40, notes: 'Guided walking tour' },
-        { title: 'Traditional Lunch', day: 1, startTime: '13:30', endTime: '15:00', cost: 35 },
-        { title: 'Art Museum Visit', day: 1, startTime: '15:30', endTime: '18:00', cost: 25 },
-        { title: 'Cultural Performance', day: 1, startTime: '19:30', endTime: '21:30', cost: 60 },
-        { title: 'Archaeological Site Visit', day: 2, startTime: '08:00', endTime: '14:00', cost: 50 },
-        { title: 'Local Craft Workshop', day: 2, startTime: '15:00', endTime: '17:00', cost: 75, notes: 'Learn traditional crafts' },
-        { title: 'Religious Site Tour', day: 3, startTime: '09:00', endTime: '12:00', cost: 20 },
-        { title: 'Traditional Market', day: 3, startTime: '14:00', endTime: '16:00', cost: 50, notes: 'Local products and souvenirs' },
-        { title: 'Cooking Class', day: 3, startTime: '17:00', endTime: '20:00', cost: 85 }
-      ]
-    }
-  ];
 
   useEffect(() => {
-    loadUserTemplates();
-  }, []);
+    const load = async () => {
+      try {
+        // In the future, this would load user's saved templates from the server
+        // For now, we'll just use predefined templates
+        setTemplates(predefinedTemplates);
+      } catch (error) {
+        console.error('Error loading templates:', error);
+        setMessage('Failed to load templates');
+        setTemplates(predefinedTemplates);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const loadUserTemplates = async () => {
-    try {
-      // In the future, this would load user's saved templates from the server
-      // For now, we'll just use predefined templates
-      setTemplates(predefinedTemplates);
-    } catch (error) {
-      console.error('Error loading templates:', error);
-      setMessage('Failed to load templates');
-      setTemplates(predefinedTemplates);
-    } finally {
-      setLoading(false);
-    }
-  };
+    load();
+  }, []);
 
   const handleSelectTemplate = (template) => {
     if (onSelectTemplate) {
