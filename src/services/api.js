@@ -150,8 +150,20 @@ export const directionsAPI = {
 
 export const usersAPI = {
   getMe: () => api.get('/users/me'),
-  // Use PUT to avoid CORS preflight failures when PATCH isn't allowed server-side
-  updateMe: (payload) => api.put('/users/me', payload),
+  // Prefer PUT, but fall back to PATCH automatically if server rejects PUT
+  updateMe: async (payload) => {
+    try {
+      return await api.put('/users/me', payload);
+    } catch (err) {
+      const status = err?.status || err?.response?.status;
+      const isNetwork = err?.code === 'ERR_NETWORK' || /Network Error/i.test(String(err?.message || ''));
+      const shouldRetryWithPatch = isNetwork || status === 405 || status === 404; // handle method not allowed or misrouted
+      if (shouldRetryWithPatch) {
+        return await api.patch('/users/me', payload);
+      }
+      throw err;
+    }
+  },
   uploadAvatar: (file) => {
     const form = new FormData();
     form.append('avatar', file);
