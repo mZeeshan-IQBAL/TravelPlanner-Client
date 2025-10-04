@@ -63,7 +63,8 @@ const GoogleAuth = ({ onSuccess, onError, disabled = false }) => {
   const handleCredentialResponse = async (response) => {
     try {
       // Send the Google credential to your backend
-      const result = await fetch(`${process.env.REACT_APP_API_URL}/auth/google`, {
+      const apiBase = process.env.REACT_APP_API_URL || '/api';
+      const result = await fetch(`${apiBase}/auth/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

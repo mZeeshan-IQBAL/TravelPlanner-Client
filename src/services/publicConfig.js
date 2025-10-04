@@ -9,7 +9,7 @@ const FALLBACK_CONFIG = {
   cloudinaryUploadPreset: process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || null,
 };
 
-const API_BASE = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
+const API_BASE = (process.env.REACT_APP_API_URL || '/api').replace(/\/$/, '');
 
 async function fetchJSON(url) {
   const res = await fetch(url, {

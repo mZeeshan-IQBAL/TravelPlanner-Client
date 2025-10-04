@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_URL || '/api',
   timeout: 30000, // 30 seconds
   // Don't set Content-Type globally so FormData uploads work (browser sets multipart boundary)
 });

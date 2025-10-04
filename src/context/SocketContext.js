@@ -44,9 +44,9 @@ export const SocketProvider = ({ children }) => {
   // Initialize socket connection
   useEffect(() => {
     if (user && token) {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-      // Socket.IO should connect to the server origin, not the /api path
-      const socketUrl = apiUrl.replace(/\/?api\/?$/i, '');
+      const apiUrl = process.env.REACT_APP_API_URL || '/api';
+      // Socket.IO should connect to the server origin when using proxy
+      const socketUrl = process.env.REACT_APP_API_URL ? apiUrl.replace(/\/?api\/?$/i, '') : window.location.origin;
 
       const newSocket = io(socketUrl, {
         auth: {

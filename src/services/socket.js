@@ -6,7 +6,8 @@ export function getSocket() {
   if (socket) return socket;
   const token = localStorage.getItem('token');
   if (!token) return null;
-  socket = io(process.env.REACT_APP_API_URL?.replace('/api','') || 'http://localhost:5000', {
+  const base = process.env.REACT_APP_API_URL?.replace('/api','') || window.location.origin;
+  socket = io(base, {
     auth: { token },
     autoConnect: true,
     transports: ['websocket']
