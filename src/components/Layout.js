@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
 import NotificationDropdown from "./NotificationDropdown";
@@ -7,10 +7,27 @@ import NotificationDropdown from "./NotificationDropdown";
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isActive = (path) => location.pathname === path;
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch(e);
+    }
+  };
+
+  const canSearch = searchQuery.trim().length >= 1;
 
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 dark:text-secondary-100">
@@ -63,7 +80,7 @@ const Layout = ({ children }) => {
 
               {/* Search Input */}
               <div className="hidden md:block w-full max-w-md">
-                <div className="relative">
+                <form onSubmit={handleSearch} className="relative">
                   <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
                     <svg
                       className="w-5 h-5"
@@ -81,10 +98,28 @@ const Layout = ({ children }) => {
                   </span>
                   <input
                     type="text"
-                    placeholder="Explore by destination"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-secondary-700 dark:bg-secondary-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={handleSearchKeyPress}
+                    placeholder="Explore by destination (e.g. France, Japan)"
+                    className="w-full pl-10 pr-12 py-2 border border-gray-300 dark:border-secondary-700 dark:bg-secondary-800 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
                   />
-                </div>
+                  <button
+                    type="submit"
+                    onClick={handleSearch}
+                    disabled={!canSearch}
+                    aria-label="Search"
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 rounded-lg text-white transition-colors ${
+                      canSearch
+                        ? 'bg-gradient-to-r from-primary-500 to-wanderlog-orange hover:from-primary-600 hover:to-wanderlog-orange shadow'
+                        : 'bg-secondary-300 dark:bg-secondary-700 cursor-not-allowed'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z" />
+                    </svg>
+                  </button>
+                </form>
               </div>
             </div>
 
@@ -338,10 +373,10 @@ const Layout = ({ children }) => {
               <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Get the app</h4>
               <div className="flex flex-col space-y-3">
                 <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/6/67/App_Store_%28iOS%29_logo.svg" alt="Download on the App Store" className="w-36" />
+                  <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" className="w-36" />
                 </a>
                 <a href="https://play.google.com" target="_blank" rel="noopener noreferrer">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" className="w-36" />
+                  <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" className="w-36" />
                 </a>
               </div>
             </div>

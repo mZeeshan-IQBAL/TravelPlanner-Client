@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { uploadAvatar, getAvatarUrl, validateImageFile } from '../services/cloudinary';
+import { getCachedPublicConfig, loadPublicConfig } from '../services/publicConfig';
 import { useAuth } from '../context/AuthContext';
 
 const Avatar = ({ 
@@ -16,6 +17,19 @@ const Avatar = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
+
+  // Track when Cloudinary config is available so we only attempt transforms then
+  const initialCfg = getCachedPublicConfig();
+  const [cfgReady, setCfgReady] = useState(!!(initialCfg?.cloudinaryCloudName || process.env.REACT_APP_CLOUDINARY_CLOUD_NAME));
+  useEffect(() => {
+    if (!cfgReady) {
+      loadPublicConfig().then(cfg => {
+        if (cfg?.cloudinaryCloudName || process.env.REACT_APP_CLOUDINARY_CLOUD_NAME) {
+          setCfgReady(true);
+        }
+      }).catch(() => {});
+    }
+  }, [cfgReady]);
 
   const sizeClasses = {
     small: 'w-8 h-8 text-xs',
@@ -81,19 +95,24 @@ const Avatar = ({
     if (src) {
       // If it's a Cloudinary public ID, generate the transformed URL
       if (typeof src === 'string' && !src.startsWith('http')) {
-        return getAvatarUrl(src, size);
+        // Only attempt when config is ready
+        if (!cfgReady) return null;
+        const url = getAvatarUrl(src, size);
+        return url || null;
       }
       return src;
     }
     
     if (user?.avatar?.publicId) {
-      return getAvatarUrl(user.avatar.publicId, size);
+      if (!cfgReady) return null;
+      const url = getAvatarUrl(user.avatar.publicId, size);
+      return url || null;
     }
     
     return null;
   };
 
-  const avatarSrc = getAvatarSrc();
+  const avatarSrc = useMemo(getAvatarSrc, [src, size, user?.avatar?.publicId, cfgReady]);
   const displayName = alt === 'Avatar' ? (user?.username || user?.name || 'User') : alt;
 
   return (
