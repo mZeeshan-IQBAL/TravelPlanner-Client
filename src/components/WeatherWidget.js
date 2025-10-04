@@ -5,6 +5,8 @@ const WeatherWidget = ({ city, coordinates, compact = false }) => {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [unit, setUnit] = useState('C'); // 'C' or 'F'
+  const [updatedAt, setUpdatedAt] = useState(null);
 
   const fetchWeather = useCallback(async () => {
     setLoading(true);
@@ -21,6 +23,7 @@ const WeatherWidget = ({ city, coordinates, compact = false }) => {
       }
 
       setWeather(response.data.data);
+      setUpdatedAt(new Date());
     } catch (err) {
       console.error('Weather fetch error:', err);
       setError(err.response?.data?.message || err.message || 'Failed to fetch weather');
@@ -81,12 +84,13 @@ const WeatherWidget = ({ city, coordinates, compact = false }) => {
   };
 
   if (compact) {
+    const temp = unit === 'C' ? weather.temperature : Math.round((weather.temperature * 9) / 5 + 32);
     return (
-      <div className={`bg-gradient-to-br ${getBackgroundGradient()} rounded-lg p-3 text-white shadow-lg`}>
+      <div className={`bg-gradient-to-br ${getBackgroundGradient()} rounded-xl p-3 text-white shadow-lg`}> 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">{weather.city}</p>
-            <p className="text-xs opacity-75 capitalize">{weather.description}</p>
+            <p className="text-sm font-semibold">{weather.city}</p>
+            <p className="text-[11px] opacity-80 capitalize">{weather.description}</p>
           </div>
           <div className="text-right">
             <div className="flex items-center">
@@ -95,7 +99,7 @@ const WeatherWidget = ({ city, coordinates, compact = false }) => {
                 alt={weather.description}
                 className="w-8 h-8"
               />
-              <span className="text-lg font-bold">{weather.temperature}°</span>
+              <span className="text-lg font-bold ml-1">{temp}°{unit}</span>
             </div>
           </div>
         </div>
@@ -103,32 +107,46 @@ const WeatherWidget = ({ city, coordinates, compact = false }) => {
     );
   }
 
+  const tempMain = unit === 'C' ? weather.temperature : Math.round((weather.temperature * 9) / 5 + 32);
+  const tempFeels = unit === 'C' ? weather.feelsLike : Math.round((weather.feelsLike * 9) / 5 + 32);
+
   return (
-    <div className={`bg-gradient-to-br ${getBackgroundGradient()} rounded-lg p-6 text-white shadow-lg`}>
-      <div className="flex items-center justify-between mb-4">
+    <div className={`bg-gradient-to-br ${getBackgroundGradient()} rounded-2xl p-6 text-white shadow-lg`}>
+      <div className="flex items-start justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold">{weather.city}</h3>
+          <h3 className="text-xl font-semibold">{weather.city}</h3>
           {weather.country && (
-            <p className="text-sm opacity-75">{weather.country}</p>
+            <p className="text-sm opacity-85">{weather.country}</p>
+          )}
+          {updatedAt && (
+            <p className="text-[11px] opacity-75 mt-1">Updated {updatedAt.toLocaleTimeString()}</p>
           )}
         </div>
         <div className="text-right">
-          <div className="flex items-center">
+          <div className="flex items-center justify-end">
             <img
               src={getWeatherIcon(weather.icon)}
               alt={weather.description}
               className="w-12 h-12"
             />
-            <span className="text-3xl font-bold ml-2">{weather.temperature}°C</span>
+            <span className="text-4xl font-extrabold ml-2">{tempMain}°{unit}</span>
           </div>
           <p className="text-sm capitalize">{weather.description}</p>
+          <div className="mt-1">
+            <button
+              onClick={() => setUnit(unit === 'C' ? 'F' : 'C')}
+              className="text-[11px] bg-white/20 hover:bg-white/30 rounded px-2 py-0.5 transition-colors"
+            >
+              Switch to °{unit === 'C' ? 'F' : 'C'}
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div className="flex items-center">
           <span className="opacity-75">Feels like:</span>
-          <span className="ml-2 font-medium">{weather.feelsLike}°C</span>
+          <span className="ml-2 font-medium">{tempFeels}°{unit}</span>
         </div>
         <div className="flex items-center">
           <span className="opacity-75">Humidity:</span>
@@ -151,21 +169,23 @@ const WeatherWidget = ({ city, coordinates, compact = false }) => {
         </div>
       )}
 
-      <div className="flex justify-between items-center mt-4 text-xs opacity-75">
+      <div className="flex justify-between items-center mt-4 text-xs opacity-85">
         {weather.sunrise && (
           <span>🌅 {new Date(weather.sunrise).toLocaleTimeString()}</span>
         )}
         {weather.sunset && (
-          <span>🌅 {new Date(weather.sunset).toLocaleTimeString()}</span>
+          <span>🌇 {new Date(weather.sunset).toLocaleTimeString()}</span>
         )}
       </div>
 
-      <button
-        onClick={fetchWeather}
-        className="mt-3 text-xs bg-white/20 hover:bg-white/30 rounded px-3 py-1 transition-colors"
-      >
-        Refresh
-      </button>
+      <div className="mt-4 flex gap-2">
+        <button
+          onClick={fetchWeather}
+          className="text-xs bg-white/20 hover:bg-white/30 rounded px-3 py-1 transition-colors"
+        >
+          Refresh
+        </button>
+      </div>
     </div>
   );
 };

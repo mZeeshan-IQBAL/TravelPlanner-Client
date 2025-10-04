@@ -7,12 +7,14 @@ import SimpleVideoShowcase from '../components/SimpleVideoShowcase';
 import TestimonialsSection from '../components/TestimonialsSection';
 import FeaturedDestinations from '../components/FeaturedDestinations';
 import WeatherWidget from '../components/WeatherWidget';
+import WeatherForecast from '../components/WeatherForecast';
 
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [weatherCity, setWeatherCity] = useState('');
+  const [coords, setCoords] = useState(null); // { lat, lon }
 
   const handleQuickSearch = (e) => {
     e.preventDefault();
@@ -162,8 +164,8 @@ className="w-full pl-12 pr-4 py-4 text-lg border-0 rounded-l-xl focus:outline-no
             </p>
           </div>
           
-          <div className="max-w-md mx-auto mb-8">
-            <div className="flex items-center bg-white dark:bg-secondary-800 rounded-xl shadow-lg border border-gray-200 dark:border-secondary-700 p-2">
+          <div className="max-w-3xl mx-auto mb-6">
+            <div className="flex items-center bg-white dark:bg-secondary-800 rounded-2xl shadow-lg border border-gray-200 dark:border-secondary-700 p-2">
               <div className="flex-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,22 +175,48 @@ className="w-full pl-12 pr-4 py-4 text-lg border-0 rounded-l-xl focus:outline-no
                 <input
                   type="text"
                   value={weatherCity}
-                  onChange={(e) => setWeatherCity(e.target.value)}
+                  onChange={(e) => { setWeatherCity(e.target.value); setCoords(null); }}
                   placeholder="Enter city name..."
                   className="w-full pl-12 pr-4 py-3 text-base border-0 rounded-l-xl focus:outline-none focus:ring-0 text-secondary-900 dark:text-secondary-100 placeholder-secondary-500 dark:placeholder-secondary-400 bg-transparent"
-                  onKeyPress={(e) => e.key === 'Enter' && setWeatherCity(weatherCity)}
+                  onKeyDown={(e) => e.key === 'Enter' && setWeatherCity(weatherCity)}
                 />
               </div>
+              <div className="flex items-center gap-2 pr-2">
+                <button
+                  onClick={() => {
+                    if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition((pos) => {
+                        setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+                        setWeatherCity('');
+                      });
+                    }
+                  }}
+                  className="px-3 py-2 text-sm bg-secondary-100 dark:bg-secondary-700 rounded-lg hover:bg-secondary-200 dark:hover:bg-secondary-600"
+                  title="Use my location"
+                >
+                  📍 Use my location
+                </button>
+              </div>
+            </div>
+            {/* Quick city chips */}
+            <div className="flex flex-wrap justify-center gap-2 mt-3">
+              {['Paris','Tokyo','New York','Dubai','Sydney'].map(c => (
+                <button key={c} onClick={() => { setWeatherCity(c); setCoords(null); }} className="px-3 py-1 rounded-full text-sm bg-secondary-100 dark:bg-secondary-800 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-300">
+                  {c}
+                </button>
+              ))}
             </div>
           </div>
           
           <div className="flex justify-center">
-            {weatherCity && (
-              <div className="w-full max-w-lg">
-                <WeatherWidget city={weatherCity} />
+            {(weatherCity || coords) ? (
+              <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6">
+                <WeatherWidget city={weatherCity || undefined} coordinates={coords || undefined} />
+                <div className="bg-white dark:bg-secondary-800 rounded-2xl p-3 border border-secondary-200 dark:border-secondary-700">
+                  <WeatherForecast city={weatherCity || undefined} coordinates={coords ? { lat: coords.lat, lon: coords.lon } : undefined} title="5-Day Forecast" />
+                </div>
               </div>
-            )}
-            {!weatherCity && (
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
                 <WeatherWidget city="Paris" compact />
                 <WeatherWidget city="Tokyo" compact />

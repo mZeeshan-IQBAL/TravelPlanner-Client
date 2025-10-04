@@ -14,8 +14,12 @@ const WeatherForecast = ({ city, coordinates, title = "5-Day Weather Forecast" }
       let response;
       if (city) {
         response = await weatherAPI.getForecast(city);
+      } else if (coordinates && (coordinates.lat || coordinates.latitude)) {
+        const lat = coordinates.lat ?? coordinates.latitude;
+        const lon = coordinates.lon ?? coordinates.longitude;
+        response = await weatherAPI.getByCoordinates(lat, lon);
       } else {
-        throw new Error('Forecast by coordinates not implemented yet');
+        throw new Error('No location provided for forecast');
       }
 
       setForecast(response.data.data);
@@ -25,7 +29,7 @@ const WeatherForecast = ({ city, coordinates, title = "5-Day Weather Forecast" }
     } finally {
       setLoading(false);
     }
-  }, [city]);
+  }, [city, coordinates]);
 
   useEffect(() => {
     if (city || coordinates) {
