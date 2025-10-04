@@ -4,9 +4,7 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   timeout: 30000, // 30 seconds
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Don't set Content-Type globally so FormData uploads work (browser sets multipart boundary)
 });
 
 // Request interceptor to add auth token
@@ -152,11 +150,13 @@ export const directionsAPI = {
 
 export const usersAPI = {
   getMe: () => api.get('/users/me'),
-  updateMe: (payload) => api.patch('/users/me', payload),
+  // Use PUT to avoid CORS preflight failures when PATCH isn't allowed server-side
+  updateMe: (payload) => api.put('/users/me', payload),
   uploadAvatar: (file) => {
     const form = new FormData();
     form.append('avatar', file);
-    return api.post('/users/me/avatar', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    // Do not set Content-Type explicitly: let the browser set the correct multipart boundary
+    return api.post('/users/me/avatar', form);
   },
 };
 
