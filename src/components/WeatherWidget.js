@@ -71,12 +71,15 @@ const WeatherWidget = ({ city, coordinates, compact = false }) => {
   const getBackgroundGradient = () => {
     const hour = new Date().getHours();
     const isNight = hour < 6 || hour > 19;
-    
-    if (weather.main.toLowerCase().includes('rain')) {
+
+    // Safely derive a condition string
+    const condition = (weather?.main || weather?.description || '').toLowerCase();
+
+    if (condition.includes('rain')) {
       return 'from-gray-600 to-gray-800';
-    } else if (weather.main.toLowerCase().includes('cloud')) {
+    } else if (condition.includes('cloud')) {
       return isNight ? 'from-gray-700 to-gray-900' : 'from-gray-400 to-gray-600';
-    } else if (weather.main.toLowerCase().includes('snow')) {
+    } else if (condition.includes('snow')) {
       return 'from-blue-200 to-blue-400';
     } else {
       return isNight ? 'from-purple-600 to-purple-900' : 'from-blue-400 to-blue-600';
