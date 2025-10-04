@@ -43,7 +43,7 @@ const Profile = () => {
           <div className="flex items-center gap-4">
             {(() => {
               const rawUrl = user?.avatar?.url || user?.avatar?.thumbnailUrl || user?.avatarUrl;
-              const apiBase = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
+              const apiBase = (process.env.REACT_APP_API_URL || '/api').replace(/\/$/, '');
               const serverOrigin = apiBase.replace(/\/api$/, '');
               const finalUrl = rawUrl
                 ? (rawUrl.startsWith('http') ? rawUrl : `${serverOrigin}${rawUrl}`)
