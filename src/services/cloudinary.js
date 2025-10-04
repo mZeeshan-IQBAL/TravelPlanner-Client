@@ -156,7 +156,7 @@ export const deleteImage = async (publicId) => {
 export const getTransformedImageUrl = (publicId, transformations = {}) => {
   const cld = ensureCloudinarySync();
   if (!cld) {
-    console.error('Cloudinary not configured. Cannot build transformed URL.');
+    // No config yet; skip building a URL and let the caller render a fallback.
     return '';
   }
   let image = cld.image(publicId);
@@ -226,17 +226,10 @@ export const validateImageFile = (file) => {
   return { isValid: true };
 };
 
-// Provide a default export that lazily resolves the instance when accessed.
-// Note: Prefer using the named helpers. This default is kept for backward compatibility.
-const cloudinaryDefault = new Proxy({}, {
-  get: (_, prop) => {
-    const cld = ensureCloudinarySync();
-    if (!cld) {
-      console.error('Cloudinary not configured. Accessed property:', String(prop));
-      return undefined;
-    }
-    return cld[prop];
-  }
-});
+// Named getters are preferred to avoid accidental early initialization.
+export { ensureCloudinarySync as getCloudinarySync, getCloudinaryAsync };
 
-export default cloudinaryDefault;
+// Provide a benign default export to avoid React Refresh probing noise.
+// Not intended for use; kept only to avoid breaking imports if any exist.
+const noopDefault = {};
+export default noopDefault;
