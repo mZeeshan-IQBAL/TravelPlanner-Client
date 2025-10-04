@@ -51,12 +51,57 @@ api.interceptors.response.use(
 
 // Auth API calls
 export const authAPI = {
-  register: (userData) => api.post('/auth/register', userData),
-  login: (credentials) => api.post('/auth/login', credentials),
-  getProfile: () => api.get('/auth/me'),
+  register: async (userData) => {
+    try {
+      return await api.post('/auth/register', userData);
+    } catch (err) {
+      if ((err?.status || err?.response?.status) === 404) {
+        return await api.post('/users/register', userData);
+      }
+      throw err;
+    }
+  },
+  login: async (credentials) => {
+    try {
+      return await api.post('/auth/login', credentials);
+    } catch (err) {
+      if ((err?.status || err?.response?.status) === 404) {
+        return await api.post('/users/login', credentials);
+      }
+      throw err;
+    }
+  },
+  getProfile: async () => {
+    try {
+      return await api.get('/auth/me');
+    } catch (err) {
+      if ((err?.status || err?.response?.status) === 404) {
+        return await api.get('/users/me');
+      }
+      throw err;
+    }
+  },
   addSearchHistory: (country) => api.post('/auth/search-history', { country }),
-  requestPasswordReset: (email) => api.post('/auth/request-password-reset', { email }),
-  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
+  requestPasswordReset: async (email) => {
+    try {
+      return await api.post('/auth/request-password-reset', { email });
+    } catch (err) {
+      if ((err?.status || err?.response?.status) === 404) {
+        return await api.post('/users/request-password-reset', { email });
+      }
+      throw err;
+    }
+  },
+  resetPassword: async (token, password) => {
+    try {
+      return await api.post('/auth/reset-password', { token, password });
+    } catch (err) {
+      if ((err?.status || err?.response?.status) === 404) {
+        return await api.post('/users/reset-password', { token, password });
+      }
+      throw err;
+    }
+  },
 };
 
 // Countries API calls
