@@ -1,14 +1,29 @@
 import { Cloudinary } from '@cloudinary/url-gen';
+import { getPublicConfig, getCachedPublicConfig } from './publicConfig';
 
-// Initialize Cloudinary
-const cloudinary = new Cloudinary({
-  cloud: {
-    cloudName: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME
-  }
-});
+// Lazily created Cloudinary instance. Never create at import time so we don't crash on missing env.
+let cldInstance = null;
+
+function ensureCloudinarySync() {
+  if (cldInstance) return cldInstance;
+  const cfg = getCachedPublicConfig();
+  const cloudName = cfg?.cloudinaryCloudName || process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+  if (!cloudName) return null;
+  cldInstance = new Cloudinary({ cloud: { cloudName } });
+  return cldInstance;
+}
+
+async function getCloudinaryAsync() {
+  const cfg = await getPublicConfig();
+  const cloudName = cfg?.cloudinaryCloudName || process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+  if (!cloudName) return null;
+  if (cldInstance) return cldInstance;
+  cldInstance = new Cloudinary({ cloud: { cloudName } });
+  return cldInstance;
+}
 
 /**
- * Upload image to Cloudinary
+ * Upload image to Cloudinary (unsigned or via preset)
  * @param {File} file - The image file to upload
  * @param {Object} options - Upload options
  * @returns {Promise<Object>} Upload result
@@ -16,7 +31,14 @@ const cloudinary = new Cloudinary({
 export const uploadImage = async (file, options = {}) => {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET);
+
+  const cfg = await getPublicConfig();
+  const uploadPreset = cfg?.cloudinaryUploadPreset || process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+  const cloudName = cfg?.cloudinaryCloudName || process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+
+  if (uploadPreset) {
+    formData.append('upload_preset', uploadPreset);
+  }
   
   // Add transformation options
   if (options.width && options.height) {
@@ -36,8 +58,9 @@ export const uploadImage = async (file, options = {}) => {
   }
 
   try {
+    if (!cloudName) throw new Error('Missing Cloudinary cloudName');
     const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
       {
         method: 'POST',
         body: formData,
@@ -72,19 +95,21 @@ export const uploadAvatar = async (file, userId) => {
       tags: ['avatar', 'profile']
     });
 
+    const cld = await getCloudinaryAsync();
+
     return {
       publicId: result.public_id,
       url: result.secure_url,
-      thumbnailUrl: cloudinary.image(result.public_id)
+      thumbnailUrl: cld ? cld.image(result.public_id)
         .resize('w_50,h_50,c_fill')
         .format('auto')
         .quality('auto')
-        .toURL(),
-      mediumUrl: cloudinary.image(result.public_id)
+        .toURL() : result.secure_url,
+      mediumUrl: cld ? cld.image(result.public_id)
         .resize('w_100,h_100,c_fill')
         .format('auto')
         .quality('auto')
-        .toURL(),
+        .toURL() : result.secure_url,
       largeUrl: result.secure_url
     };
   } catch (error) {
@@ -129,7 +154,12 @@ export const deleteImage = async (publicId) => {
  * @returns {string} Transformed image URL
  */
 export const getTransformedImageUrl = (publicId, transformations = {}) => {
-  let image = cloudinary.image(publicId);
+  const cld = ensureCloudinarySync();
+  if (!cld) {
+    console.error('Cloudinary not configured. Cannot build transformed URL.');
+    return '';
+  }
+  let image = cld.image(publicId);
 
   if (transformations.width && transformations.height) {
     image = image.resize(`w_${transformations.width},h_${transformations.height},c_${transformations.crop || 'fill'}`);
@@ -196,4 +226,17 @@ export const validateImageFile = (file) => {
   return { isValid: true };
 };
 
-export default cloudinary;
+// Provide a default export that lazily resolves the instance when accessed.
+// Note: Prefer using the named helpers. This default is kept for backward compatibility.
+const cloudinaryDefault = new Proxy({}, {
+  get: (_, prop) => {
+    const cld = ensureCloudinarySync();
+    if (!cld) {
+      console.error('Cloudinary not configured. Accessed property:', String(prop));
+      return undefined;
+    }
+    return cld[prop];
+  }
+});
+
+export default cloudinaryDefault;
